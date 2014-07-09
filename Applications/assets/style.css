@@ -276,3 +276,15 @@ fieldset[disabled] .btn-primary.active {
   color: #333434;
   background-color: #ffffff;
 }
+
+#tabelca {
+width: 100%;
+border-radius:25px;
+}
+#tabelca,th,tr {
+border: 1px solid black;
+border-radius: 25px;
+border-collapse:collapse;
+padding:5px;
+text-align:center;
+}
