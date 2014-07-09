@@ -610,7 +610,7 @@
     err_modal.modal('show');
   }   
   
-  //function updateGraphData() {
+  function updateGraphData() {
     if(downloading) {
       return;
     }
@@ -1713,12 +1713,12 @@
 		    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
-              <a data-toggle="collapse" href="#measure">
+              <a data-toggle="collapse" href="#measure_specs">
                 Measurement specs
               </a>
             </h4>
           </div>
-          <div id="measure" class="panel-collapse collapse in">
+          <div id="measure_specs" class="panel-collapse collapse in">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
@@ -1816,9 +1816,9 @@
                   </div>
                 </div>
 				
-				<div>
+				<!--<div>
 				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="startApp()">Start</button>
-				</div>
+				</div>-->
 				
 				</div>
             </div>
