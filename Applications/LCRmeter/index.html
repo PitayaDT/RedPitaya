@@ -142,7 +142,7 @@
     $('#trig_edge').on('change', function() { onDropdownChange($(this), 'trig_edge'); });
     
     //Plot trigger
-
+/*
     $('#trig_level')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
@@ -316,7 +316,7 @@
         updateTriggerSlider();
       }
     });
-      
+    */  
     // Events binding for gain controls
     
     $('#gain_ch1_att').on('change', function() { onDropdownChange($(this), 'prb_att_ch1'); });
@@ -610,7 +610,7 @@
     err_modal.modal('show');
   }   
   
-  //function updateGraphData() {
+  function updateGraphData() {
     if(downloading) {
       return;
     }
@@ -1692,7 +1692,14 @@
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-8">
         <div class="graph-holder well well-small">
-
+			<table id="tabelca">
+			<tr>
+				<th> Amplitude |Z| </th>
+				<th> Phase /°</th>
+				<th> Frequency /Hz</th>
+				<th> Measurement </th>
+			</tr>
+			</table>
         </div>
       </div>
       <!--
@@ -1818,13 +1825,13 @@
 				
 				<div>
 				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="startApp()">Start</button>
-				</div>
+				</div> 
 				
 				</div>
             </div>
           </div>
         </div>
-        <div class="panel panel-default">
+    <!--    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#trigger">
@@ -1962,7 +1969,7 @@
               </form>
             </div>
           </div>
-        </div>
+        </div> -->
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
