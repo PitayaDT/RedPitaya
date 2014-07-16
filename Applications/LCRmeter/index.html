@@ -848,12 +848,9 @@
     $('#trig_source').val(params.original.trig_source);
     $('#trig_edge').val(params.original.trig_edge);
     $('#trig_level').val(floatToLocalString(params.original.trig_level));
-    
     $('#info_ch1_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch1)));
     $('#info_ch1_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch1)));
-	
-   var jup = $('#info_ch1_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch1)));
-   
+	$('#info_ch1_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch1)));   
     $('#info_ch1_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch1)));
     $('#info_ch1_freq').html(floatToLocalString(convertHz(params.original.meas_freq_ch1)));
     $('#info_ch1_period').html(floatToLocalString(convertSec(params.original.meas_per_ch1)));
@@ -897,6 +894,8 @@
     
     updateTimeUnits(orig_params);
     $('#ytitle').show();
+	
+	//CreateFunction();
   }
   
   function updateTimeUnits(new_params) {
@@ -1654,28 +1653,20 @@
 		var table = document.getElementById("tabelca");
 		//var ampNum = new Number(amp);
 		measure = measure + 1;
-		var amp = document.getElementById("info_ch1_amp").value;
-		{
-			var row = table.insertRow(-1);
-			var cellAmp = row.insertCell(0);
-			var cellPh = row.insertCell(1);
-			var cellFrq = row.insertCell(2);
-			var cellMsr = row.insertCell(3);
-			cellAmp.innerHTML = amp;//Num;
-			cellPh.innerHTML = "20";
-			cellFrq.innerHTML = "30";
-			cellMsr.innerHTML = measure;
-		}
-	}
-
-/*	function FillRow(amp,phase,freq)
-	{
-		var table = document.getElementById("tabelca");
-		cellAmp.innerHTML = amp;
-		cellPh.innerHTML = phase;
+		var amp = document.getElementById("info_ch1_amp").innerHTML;
+		var freq = document.getElementById("info_ch1_freq").innerHTML;
+		var row = table.insertRow(-1);
+		var cellAmp = row.insertCell(0);
+		var cellPh = row.insertCell(1);
+		var cellFrq = row.insertCell(2);
+		var cellMsr = row.insertCell(3);
+		cellAmp.innerHTML = amp;//Num;
+		cellPh.innerHTML = "20";
 		cellFrq.innerHTML = freq;
+		cellMsr.innerHTML = measure;
+		
 	}
-*/  
+ 
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
@@ -1734,16 +1725,8 @@
 				<th> Frequency /Hz</th>
 				<th> Measurement </th>
 			</tr>
-	<!--		<tr>
-				<th> <span id="info_ch1_amp"></span> </th>
-				<th> 0 </th>
-				<th> <span id="info_ch1_freq"></span> </th>
-				<th> 0 </th>
-			</tr>
-	-->		
 			</table><br>
 			<button onclick="CreateFunction()">Create row</button>
-	<!--		<button onclick="FillRow('info_ch1_min','info_ch1_min','info_ch1_min')">Fill row</button> -->
         </div>
       </div>
       
@@ -1764,12 +1747,12 @@
 		    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
-              <a data-toggle="collapse" href="#measure_specs">
+              <a data-toggle="collapse" href="#measure">
                 Measurement specs
               </a>
             </h4>
           </div>
-          <div id="measure_specs" class="panel-collapse collapse in">
+          <div id="measure" class="panel-collapse collapse in">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
@@ -1867,19 +1850,15 @@
                   </div>
                 </div>
 				
-				<!--<div>
+				<div>
 				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="startApp()">Start</button>
-<<<<<<< HEAD
-				</div>-->
-=======
 				</div> 
->>>>>>> aae57723b5a31cbd63ca93c47400decc4e29461b
 				
 				</div>
             </div>
           </div>
         </div>
-        <div class="panel panel-default">
+    <!--    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#trigger">
@@ -1941,6 +1920,9 @@
             </div>
           </div>
         </div>
+		
+		-->
+		
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2018,7 +2000,6 @@
             </div>
           </div>
         </div>
-		
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2069,8 +2050,7 @@
                 <div class="col-xs-3 txt-right">Period:</div>
                 <div class="col-xs-3"><span id="info_ch2_period">- s</span></div>
               </div>
-			  <!--
-              <div id="info_cursors_title" class="row group-label" style="text-align: center;">Cursors</div>
+              <!--<div id="info_cursors_title" class="row group-label" style="text-align: center;">Cursors</div>
               <div id="info_cursors_data" class="row">
                 <div class="col-xs-6 txt-right">&#916;t &nbsp;=</div>
                 <div class="col-xs-6"><span id="info_cursor1">-</span></div>
