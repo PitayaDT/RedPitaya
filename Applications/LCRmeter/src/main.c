@@ -714,6 +714,7 @@ int rp_set_params(rp_app_params_t *p, int len)
                                         rp_main_params[PRB_ATT_CH2].value);
         }
 
+        
         if(ch1_max_adc_v > ch2_max_adc_v)
             rp_main_params[GUI_RST_Y_RANGE].value = 2.0 * ch1_max_adc_v;
         else
