@@ -1666,6 +1666,23 @@
 		cellMsr.innerHTML = measure;
 		
 	}
+	
+	function calibrate()
+	{
+		var c = confirm("Open calibration");
+		if(c == true)
+		{
+			var r = confirm("Closed calibration");
+		}
+		if(r == true)
+		{
+			alert("Calibration complete");
+		}
+		else
+		{
+			alert("Calibration skipped");
+		}
+	}
  
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
@@ -1851,6 +1868,7 @@
                 </div>
 				
 				<div>
+				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="calibrate()">Calibrate</button>
 				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="startApp()">Start</button>
 				</div> 
 				
