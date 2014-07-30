@@ -1,0 +1,33 @@
+Changes:
+	main.c:
+		added lines: 297 - 303
+
+			         /**
+	        New parameters
+	        */
+
+	    { "b_calib", 0, 0, 0, 0, 0 }, 
+	    { "b_measure", 0, 0, 0, 0, 0 },  
+	    { "b_wait", 0, 0, 0, 0, 0 },  
+
+
+
+
+
+	main.h:
+		changed line: 48
+			from: 
+				#define PARAMS_NUM        81
+			to:
+				#define PARAMS_NUM        84
+
+		added lines: 133 - 140			
+
+			/**
+			New definitions
+			P.S Don't forget to change the PARAMS_NUM !!!!!
+			*/
+
+			#define B_CALIB           81
+			#define B_MEASUR          82
+			#define B_WAIT            83
