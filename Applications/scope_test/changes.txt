@@ -1,5 +1,5 @@
 Changes:
-	main.c:
+	/src/main.c:
 		added lines: 297 - 303
 
 			         /**
@@ -11,10 +11,7 @@ Changes:
 	    { "b_wait", 0, 0, 0, 0, 0 },  
 
 
-
-
-
-	main.h:
+	/src/main.h:
 		changed line: 48
 			from: 
 				#define PARAMS_NUM        81

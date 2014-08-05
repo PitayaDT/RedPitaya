@@ -294,13 +294,13 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "pid_22_kd",  0, 1, 0, -8192, 8191 },
 
 
-         /**
-        New parameters
-        */
+     /**
+    New parameters
+    */
 
-    { "b_calib", 0, 0, 0, 0, 0 }, 
-    { "b_measure", 0, 0, 0, 0, 0 },  
-    { "b_wait", 0, 0, 0, 0, 0 },  
+    { "b_calib", 0, 0, 0, 0, 0 },
+    { "b_measure", 0, 0, 0, 0, 0 },
+    { "b_wait", 1, 0, 0, 0, 2000 },
 
 
     { /* Must be last! */
@@ -1069,6 +1069,8 @@ int rp_copy_params(rp_app_params_t *src, rp_app_params_t **dst)
         
     }
 
+    /* p_new[B_WAIT].value = 20; for testing */
+
     *dst = p_new;
     return 0;
 }
@@ -1108,7 +1110,7 @@ int rp_update_main_params(rp_app_params_t *params)
         return -1;
 
     pthread_mutex_lock(&rp_main_params_mutex);
-    while(params[i].name != NULL) {
+    while(params[i].name != NULL) {  
         rp_main_params[i].value = params[i].value;
         i++;
     }
@@ -1128,6 +1130,8 @@ int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
     rp_main_params[MEAS_AVG_CH1].value = ch1_meas.avg;
     rp_main_params[MEAS_FREQ_CH1].value = ch1_meas.freq;
     rp_main_params[MEAS_PER_CH1].value = ch1_meas.period;
+
+    /* rp_main_params[B_WAIT].value = 200; for testing*/
 
     rp_main_params[MEAS_MIN_CH2].value = ch2_meas.min;
     rp_main_params[MEAS_MAX_CH2].value = ch2_meas.max;

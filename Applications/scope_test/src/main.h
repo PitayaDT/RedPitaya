@@ -137,7 +137,7 @@ P.S Don't forget to change the PARAMS_NUM !!!!!
 
 #define B_CALIB           81
 #define B_MEASUR          82
-#define B_WAIT            83   
+#define B_WAIT            83
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope, AWG or PID */
