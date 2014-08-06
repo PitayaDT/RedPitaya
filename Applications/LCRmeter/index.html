@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -1762,21 +1762,7 @@
       </div>
     </div>
     <div class="row">
-	<!--
-      <div class="col-xs-12 col-sm-12 col-md-8">
-        <div class="graph-holder well well-small">
-			<table id="tabelca">
-			<tr>
-				<th> Amplitude |Z| </th>
-				<th> Phase /°</th>
-				<th> Frequency /Hz</th>
-				<th> Measurement </th>
-			</tr>
-			</table><br>
-			<!--<button onclick="CreateFunction()">Create row</button> -- >
-			<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
-        </div>
-      </div> -->
+
 	  <div class="col-xs-12 col-sm-12 col-md-8">
         <div class="graph-holder well well-small">
           <div id="ytitle">Voltage [ V ]</div>
@@ -1789,6 +1775,23 @@
         </div>
       </div>
 	  
+	  
+      <div class="col-xs-12 col-sm-12 col-md-8">
+        <div class="graph-holder well well-small">
+			<table id="tabelca">
+			<tr>
+				<th> Amplitude |Z| </th>
+				<th> Phase /°</th>
+				<th> Frequency /Hz</th>
+				<th> Measurement </th>
+			</tr>
+			</table><br>
+			<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
+        </div>
+      </div> 
+	  
+	  
+<!--	  
 	  <div class="panel-group col-xs-12 col-sm-12 col-md-8" id="accordion">
 	    <div class="panel panel-default">
 	      <div class="panel-heading">
@@ -1805,14 +1808,14 @@
 				<th> Measurement </th>
 			  </tr>
 			</table><br>
+			<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
 		  </div>
 		</div>  
 	  </div>
-
+-->
 
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
-	  <!-- Measurement specs -->
-		    <div class="panel panel-default">
+		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#measure">
@@ -1827,7 +1830,6 @@
                   <label for="trig_source" class="col-xs-4 control-label">Range:</label>
                   <div class="col-xs-8">
                     <select id="trig_source" class="form-control">
-					<!-- popravi range select -->
                       <option value="0">Auto</option>
                       <option value="1">Manual</option>
                     </select>
@@ -1837,7 +1839,6 @@
                   <label for="trig_mode" class="col-xs-4 control-label">Nominal curr:</label>
 				  <div class="col-xs-4 col-sm-4">
                     <input type="text" autocomplete="off" class="form-control" value="5" >
-                    
                   </div>
                   <div class="col-xs-4 col-sm-4">
                     <select id="trig_mode" class="form-control">
@@ -1850,7 +1851,6 @@
                   <label for="trig_edge" class="col-xs-4 control-label">Load correct:</label>
                   <div class="col-xs-4 col-sm-4">
                     <input type="text" autocomplete="off" class="form-control" value="10">
-                    
                   </div>
                   <div class="col-xs-4 col-sm-4">
                     <select id="trig_mode" class="form-control">
@@ -1865,7 +1865,6 @@
                   <label for="trig_edge" class="col-xs-4 control-label">Load correct:</label>
                   <div class="col-xs-4 col-sm-4">
                     <input type="text" autocomplete="off" class="form-control" value="10" >
-                    
                   </div>
                   <div class="col-xs-4 col-sm-4">
                     <select id="trig_mode" class="form-control">
@@ -1878,7 +1877,6 @@
                 </div>
 				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="calibrate()">Calibrate</button>
 				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="Create()<!--startApp()-->">Start</button>
-				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
 				<div class="panel-heading">
 				  <h4 class="panel-title">
 					<a data-toggle="collapse" href="#sweep2">
@@ -1887,37 +1885,36 @@
 				  </h4>
 				</div>
 				<div id="sweep2" class="panel-collapse collapse in">
-                <div class="form-group">
-                  <label for="trig_edge" class="col-xs-4 control-label">Frequency:</label>
-                  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="100" >
+                  <div class="form-group">
+                    <label for="trig_edge" class="col-xs-4 control-label">Frequency:</label>
+                    <div class="col-xs-4 col-sm-4">
+                      <input type="text" class="form-control" value="100" >
+                    </div>
+                    <div class="col-xs-4 col-sm-4">
+                      <select id="trig_mode" class="form-control">
+                        <option value="0">Hz</option>
+                        <option value="1">kHz</option>
+                      </select>
+                    </div>
                   </div>
-                  <div class="col-xs-4 col-sm-4">
-                    <select id="trig_mode" class="form-control">
-                      <option value="0">Hz</option>
-                      <option value="1">kHz</option>
-                    </select>
+				  <div class="form-group">
+                    <label for="trig_edge" class="col-xs-4 control-label">Step:</label>
+                    <div class="col-xs-4 col-sm-8">
+                      <input type="text" class="form-control" value="10" >
+                    </div>
                   </div>
-                </div>
-				<div class="form-group">
-                  <label for="trig_edge" class="col-xs-4 control-label">Step:</label>
-                  <div class="col-xs-4 col-sm-8">
-                    <input type="text" autocomplete="off" class="form-control" value="10" >
+				  <div class="form-group">
+                    <label for="trig_edge" class="col-xs-4 control-label">Wait:</label>
+                    <div class="col-xs-4 col-sm-4">
+                      <select id="wait_mode" class="form-control">
+                        <option value="0">no</option>
+                        <option value="1">yes</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-				<div class="form-group">
-                  <label for="trig_edge" class="col-xs-4 control-label">Wait:</label>
-                  <div class="col-xs-4 col-sm-4">
-                    <select id="wait_mode" class="form-control">
-                      <option value="0">no</option>
-                      <option value="1">yes</option>
-                    </select>
-                  </div>
-                </div>
-				<div>
-				<button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunctionMS()">Start</button>
-				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
-				</div> 
+				  <div>
+				  <button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunctionMS()">Start</button>
+				  </div> 
 				</div>
 				<div class="panel-heading">
 				  <h4 class="panel-title">
@@ -1927,44 +1924,39 @@
 				  </h4>
 				</div>
 				<div id="sweep" class="panel-collapse collapse in">
-                <div class="form-group">
-                  <label for="trig_edge" class="col-xs-4 control-label">Start freq.:</label>
-                  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="100" >
-                    
+                  <div class="form-group">
+                    <label for="trig_edge" class="col-xs-4 control-label">Start freq.:</label>
+                    <div class="col-xs-4 col-sm-4">
+                      <input type="text" class="form-control" value="100" >   
+                    </div>
+                    <div class="col-xs-4 col-sm-4">
+                      <select id="trig_mode" class="form-control">
+                        <option value="0">Hz</option>
+                        <option value="1">kHz</option>
+                      </select>
+                    </div>
                   </div>
-                  <div class="col-xs-4 col-sm-4">
-                    <select id="trig_mode" class="form-control">
-                      <option value="0">Hz</option>
-                      <option value="1">kHz</option>
-                    </select>
+				  <div class="form-group">
+                    <label for="trig_edge" class="col-xs-4 control-label">Stop freq.:</label>
+                    <div class="col-xs-4 col-sm-4">
+                      <input type="text" class="form-control" value="1" >
+                    </div>
+                    <div class="col-xs-4 col-sm-3.5">
+                      <select id="trig_mode" class="form-control">
+                        <option value="0">Hz</option>
+                        <option value="1">kHz</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-				<div class="form-group">
-                  <label for="trig_edge" class="col-xs-4 control-label">Stop freq.:</label>
-                  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="1" >
-                
+				  <div class="form-group" id="step-val">
+                    <label for="trig_edge" class="col-xs-4 control-label">Step:</label>
+                    <div class="col-xs-4 col-sm-8">
+                      <input type="text" class="form-control" value="50" >
+                    </div>
                   </div>
-                  <div class="col-xs-4 col-sm-3.5">
-                    <select id="trig_mode" class="form-control">
-                      <option value="0">Hz</option>
-                      <option value="1">kHz</option>
-                    </select>
-                  </div>
-                </div>
-				<div class="form-group" id="step-val">
-                  <label for="trig_edge" class="col-xs-4 control-label">Step:</label>
-                  <div class="col-xs-4 col-sm-8">
-                    <input type="text" autocomplete="off" class="form-control" value="10" >
-                  
-                  </div>
-                </div>
-				
-				<div>
-				<button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunctionFS()">Start</button>
-				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
-				</div> 
+				  <div>
+				    <button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunctionFS()">Start</button>
+				  </div> 
 				</div>
             </div>
           </div>
@@ -2188,11 +2180,12 @@
 			</div>
 		  </div>
 		</div>
+		
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#generator">
-                Signal generator [OLD]
+                Signal generator
               </a>
             </h4>
           </div>
@@ -2222,7 +2215,7 @@
                 <div class="form-group">
                   <label for="gen_ch1_ampl" class="col-xs-4 control-label">Amplitude:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="2" id="gen_ch1_ampl">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_ampl">
                     <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_ampl">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
@@ -2360,7 +2353,8 @@
               </form>
             </div>
           </div>
-        </div>
+        </div> 
+		
       </div>
     </div>
     <div class="footer clearfix">
