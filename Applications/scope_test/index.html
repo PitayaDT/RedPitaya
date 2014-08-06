@@ -914,6 +914,9 @@
     $('#gen_ch2_freq').val(floatToLocalString(params.original.gen_sig_freq_ch2));
     $('#gen_ch2_dc').val(floatToLocalString(params.original.gen_sig_dcoff_ch2));
     $('#gen_ch2_trigmode').val(params.original.gen_trig_mod_ch2);
+
+    //New code
+    $('#b_wait').val(params.original.b_wait);
     
     $('#gen_ch1_single').prop('disabled', (params.original.gen_trig_mod_ch1 == 1 ? false : true));
     $('#gen_ch2_single').prop('disabled', (params.original.gen_trig_mod_ch2 == 1 ? false : true));    
@@ -951,8 +954,11 @@
     return false;
   }
   
-  function sendParams(refresh_data, force_send, single_btn) {
-    if(sending || (force_send !== true && !isParamChanged())) {
+  function sendParams(refresh_data, force_send, single_btn) 
+  {
+  
+    if(sending || (force_send !== true && !isParamChanged())) 
+    {
       send_que = sending;
       return;
     }
@@ -1785,6 +1791,88 @@
     value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
     return value + unit;
   }
+  //New code
+  function wait()
+  {
+    if(params.local.b_wait == 1)
+      params.local.b_wait = 0;
+    else
+      params.local.b_wait = 1;
+  }
+
+  // New code copyed from RedPitaya/Applications/LCRmeter/index.html
+  //---------------------------------------------------------------
+  var measure = 0;
+  //$('#amp').html(parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
+  //var amp = (parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
+  
+  function Create()
+  {
+    var table = document.getElementById("tabelca");
+    measure = measure + 1;
+    var amp = document.getElementById("info_ch1_amp").innerHTML;
+    var freq = document.getElementById("info_ch1_freq").innerHTML;
+    var row = table.insertRow(-1);
+    var cellAmp = row.insertCell(0);
+    var cellPh = row.insertCell(1);
+    var cellFrq = row.insertCell(2);
+    var cellMsr = row.insertCell(3);
+    cellAmp.innerHTML = amp;//Num;
+    cellPh.innerHTML = "20";
+    cellFrq.innerHTML = freq;
+    cellMsr.innerHTML = measure;
+    
+  }
+  
+  function CreateFunction()
+    {
+      Create();
+      sleep(50);
+  }
+  
+  function CreateFunctionMS()
+    {
+    var i;
+    for(i=0; i<100; i++)
+    {
+      Create();
+      sleep(5);
+      
+      
+    }
+  }
+  
+  function sleep(milliseconds)
+  {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++)
+    {
+      if ((new Date().getTime() - start) > milliseconds)
+      {
+        break;
+      }
+    }
+    }
+  
+  function calibrate()
+  {
+    var c = confirm("Open calibration");
+    if(c == true)
+    {
+      var r = confirm("Closed calibration");
+    }
+    if(r == true)
+    {
+      alert("Calibration complete");
+    }
+    else
+    {
+      alert("Calibration skipped");
+    }
+  }
+
+  //-------------------------------------------------------
+
   
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
@@ -1822,6 +1910,7 @@
         </div>
         <button id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
         <button id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
+        <button id="wait" class="btn btn-primary btn-lg" data-checked="true" onclick="wait()">wait</button>
         <button id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
         <button id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
       </div>
@@ -1838,6 +1927,24 @@
           <div id="xtitle"></div>
         </div>
       </div>
+      <!--New code -->
+
+      <div class="col-xs-12 col-sm-12 col-md-8">
+        <div class="graph-holder well well-small">
+          <table id="tabelca">
+            <tr>
+              <th> Amplitude |Z| </th>
+              <th> Phase /°</th>
+              <th> Frequency /Hz</th>
+              <th> Measurement </th>
+            </tr>
+          </table><br>
+          <button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
+          <button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunction()">Start</button>
+        </div>
+      </div> 
+
+      <!--New code -->
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
         <div class="panel panel-default">
           <div class="panel-heading">

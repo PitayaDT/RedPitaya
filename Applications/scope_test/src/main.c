@@ -296,11 +296,12 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
 
      /**
     New parameters
+    don't foget to change the main.h !!!
     */
 
-    { "b_calib", 0, 0, 0, 0, 0 },
-    { "b_measure", 0, 0, 0, 0, 0 },
-    { "b_wait", 1, 0, 0, 0, 2000 },
+    { "b_calib", 0, 0, 0, 0, 1 },
+    { "b_measure", 0, 0, 0, 0, 1 },
+    { "b_wait", 0, 0, 0, 0, 1 },
 
 
     { /* Must be last! */

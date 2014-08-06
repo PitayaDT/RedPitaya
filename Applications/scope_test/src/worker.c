@@ -253,6 +253,7 @@ void *rp_osc_worker_thread(void *args)
         /* update states - we save also old state to see if we need to reset
          * FPGA 
          */
+         
         old_state = state;
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
@@ -545,12 +546,13 @@ void *rp_osc_worker_thread(void *args)
 
         /* We have acquisition - if we are in single put state machine
          * to idle */
-        if((state == rp_osc_single_state) && (!long_acq)) {
-            rp_osc_worker_change_state(rp_osc_idle_state);
-        }
 
-       
-       
+         /* New code */
+         /* added "||  (int)rp_osc_params[B_WAIT].value", b_wait can be 1 or 0 */
+        if( ((state == rp_osc_single_state) && (!long_acq)) ||  (int)rp_osc_params[B_WAIT].value )
+        {
+            rp_osc_worker_change_state(rp_osc_idle_state);
+        }     
         
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
