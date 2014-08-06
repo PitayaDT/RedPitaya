@@ -1648,13 +1648,12 @@
   //$('#amp').html(parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
   //var amp = (parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
   
-  function CreateFunction()
+  function Create()
 	{
 		var table = document.getElementById("tabelca");
-		//var ampNum = new Number(amp);
 		measure = measure + 1;
 		var amp = document.getElementById("info_ch1_amp").innerHTML;
-		var freq = document.getElementById("info_ch1_freq").innerHTML;
+		var freq = document.getElementById("info_ch1_min").innerHTML;
 		var row = table.insertRow(-1);
 		var cellAmp = row.insertCell(0);
 		var cellPh = row.insertCell(1);
@@ -1666,6 +1665,36 @@
 		cellMsr.innerHTML = measure;
 		
 	}
+	
+  function CreateFunction()
+    {
+			Create();
+			sleep(50);
+	}
+	
+	function CreateFunctionMS()
+    {
+		var i;
+		for(i=0; i<100; i++)
+		{
+			Create();
+			sleep(5);
+			
+			
+		}
+	}
+	
+	function sleep(milliseconds)
+	{
+		var start = new Date().getTime();
+		for (var i = 0; i < 1e7; i++)
+		{
+			if ((new Date().getTime() - start) > milliseconds)
+			{
+				break;
+			}
+		}
+    }
 	
 	function calibrate()
 	{
@@ -1733,6 +1762,7 @@
       </div>
     </div>
     <div class="row">
+	<!--
       <div class="col-xs-12 col-sm-12 col-md-8">
         <div class="graph-holder well well-small">
 			<table id="tabelca">
@@ -1743,11 +1773,11 @@
 				<th> Measurement </th>
 			</tr>
 			</table><br>
-			<button onclick="CreateFunction()">Create row</button>
+			<!--<button onclick="CreateFunction()">Create row</button> -- >
+			<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
         </div>
-      </div>
-      
-      <div class="col-xs-12 col-sm-12 col-md-8">
+      </div> -->
+	  <div class="col-xs-12 col-sm-12 col-md-8">
         <div class="graph-holder well well-small">
           <div id="ytitle">Voltage [ V ]</div>
           <div id="trigger_cnv_holder">
@@ -1758,14 +1788,35 @@
           <div id="xtitle"></div>
         </div>
       </div>
-      
+	  
+	  <div class="panel-group col-xs-12 col-sm-12 col-md-8" id="accordion">
+	    <div class="panel panel-default">
+	      <div class="panel-heading">
+		    <h4 class="panel-title">
+		      Table of measurements
+		    </h4>
+	      </div>
+		  <div class="panel-body">
+		    <table id="tabelca">
+			  <tr>
+				<th> Amplitude |Z| </th>
+				<th> Phase /°</th>
+				<th> Frequency /Hz</th>
+				<th> Measurement </th>
+			  </tr>
+			</table><br>
+		  </div>
+		</div>  
+	  </div>
+
+
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
 	  <!-- Measurement specs -->
 		    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#measure">
-                Measurement specs
+                Measurement specifications
               </a>
             </h4>
           </div>
@@ -1825,12 +1876,55 @@
                     </select>
                   </div>
                 </div>
+				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="calibrate()">Calibrate</button>
+				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="Create()<!--startApp()-->">Start</button>
+				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
 				<div class="panel-heading">
-					<h4 class="panel-title">
-					<a data-toggle="collapse" href="#sweep">
-						Parametric sweep
+				  <h4 class="panel-title">
+					<a data-toggle="collapse" href="#sweep2">
+						Measurement sweep
 					</a>
-					</h4>
+				  </h4>
+				</div>
+				<div id="sweep2" class="panel-collapse collapse in">
+                <div class="form-group">
+                  <label for="trig_edge" class="col-xs-4 control-label">Frequency:</label>
+                  <div class="col-xs-4 col-sm-4">
+                    <input type="text" autocomplete="off" class="form-control" value="100" >
+                  </div>
+                  <div class="col-xs-4 col-sm-4">
+                    <select id="trig_mode" class="form-control">
+                      <option value="0">Hz</option>
+                      <option value="1">kHz</option>
+                    </select>
+                  </div>
+                </div>
+				<div class="form-group">
+                  <label for="trig_edge" class="col-xs-4 control-label">Step:</label>
+                  <div class="col-xs-4 col-sm-8">
+                    <input type="text" autocomplete="off" class="form-control" value="10" >
+                  </div>
+                </div>
+				<div class="form-group">
+                  <label for="trig_edge" class="col-xs-4 control-label">Wait:</label>
+                  <div class="col-xs-4 col-sm-4">
+                    <select id="wait_mode" class="form-control">
+                      <option value="0">no</option>
+                      <option value="1">yes</option>
+                    </select>
+                  </div>
+                </div>
+				<div>
+				<button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunctionMS()">Start</button>
+				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
+				</div> 
+				</div>
+				<div class="panel-heading">
+				  <h4 class="panel-title">
+					<a data-toggle="collapse" href="#sweep">
+						Frequency sweep
+					</a>
+				  </h4>
 				</div>
 				<div id="sweep" class="panel-collapse collapse in">
                 <div class="form-group">
@@ -1859,7 +1953,7 @@
                     </select>
                   </div>
                 </div>
-				<div class="form-group">
+				<div class="form-group" id="step-val">
                   <label for="trig_edge" class="col-xs-4 control-label">Step:</label>
                   <div class="col-xs-4 col-sm-8">
                     <input type="text" autocomplete="off" class="form-control" value="10" >
@@ -1868,10 +1962,9 @@
                 </div>
 				
 				<div>
-				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="calibrate()">Calibrate</button>
-				<button id="btn_start" class="btn btn-primary btn-lg" data-checked="true" onclick="startApp()">Start</button>
+				<button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunctionFS()">Start</button>
+				<button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
 				</div> 
-				
 				</div>
             </div>
           </div>
@@ -2081,64 +2174,25 @@
             </div>
           </div>
         </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
+		<div class="panel panel-default">
+		  <div class="panel-heading">
             <h4 class="panel-title">
-              <a data-toggle="collapse" href="#gain">
-                Gain settings
+              <a data-toggle="collapse" href="#generatorLCR">
+                Signal generator [LCR]
               </a>
             </h4>
           </div>
-          <div id="gain" class="panel-collapse collapse">
-            <div class="panel-body">
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="group-label" style="padding-bottom: 10px;">Channel 1</div>
-                <div class="form-group">
-                  <label for="gain_ch1_att" class="col-xs-4 col-sm-6 control-label">Probe attenuation:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch1_att">
-                      <option value="0">1x</option>
-                      <option value="1">10x</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="gain_ch1_sett" class="col-xs-4 col-sm-6 control-label">Gain setting:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch1_sett">
-                      <option value="0">LV</option>
-                      <option value="1">HV</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="group-label" style="padding: 10px 0;">Channel 2</div>
-                <div class="form-group">
-                  <label for="gain_ch2_att" class="col-xs-4 col-sm-6 control-label">Probe attenuation:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch2_att">
-                      <option value="0">1x</option>
-                      <option value="1">10x</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="gain_ch2_sett" class="col-xs-4 col-sm-6 control-label">Gain setting:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch2_sett">
-                      <option value="0">LV</option>
-                      <option value="1">HV</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+		  <div id="generatorLCR" class="panel-collapse collapse">
+		    <div class="panel-body">
+			
+			</div>
+		  </div>
+		</div>
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#generator">
-                Signal generator
+                Signal generator [OLD]
               </a>
             </h4>
           </div>
@@ -2147,67 +2201,67 @@
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="checkbox" style="padding-bottom: 12px;">
                   <label class="group-label">
-                    <input type="checkbox" id="gen_enable_ch1" checked> Basic
+                    <input type="checkbox" id="gen_enable_ch1" checked> Channel 1
                   </label>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">Frequency:</label>
-				  <!-- okno za vpis -->
-				  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="0" >
-                  
-                  </div>
-                  <div class="col-xs-4 col-sm-4">
+                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">Signal type:</label>
+                  <div class="col-xs-4 col-sm-7">
                     <select class="form-control" id="gen_ch1_sigtype">
-                      <option value="0">Hz</option>
-                      <option value="1">kHz</option>
+                      <option value="0">Sine</option>
+                      <option value="1">Square</option>
+                      <option value="2">Triangle</option>
+                      <option value="3">From file</option>
                     </select>
                   </div>
                 </div>
               </form>
-			  <form class="form-horizontal" role="form" onsubmit="return false;">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">AC Voltage:</label>
-				  <!-- okno za vpis -->
-				  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="0" >
+                  <label for="gen_ch1_ampl" class="col-xs-4 control-label">Amplitude:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="2" id="gen_ch1_ampl">
+                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_ampl">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
-                  <div class="col-xs-4 col-sm-4">
-                    <select class="form-control" id="gen_ch1_sigtype">
-                      <option value="0">mV</option>
-                      <option value="1">V</option>
-                    </select>
-                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_ampl_units">Vpp</div>
                 </div>
               </form>
-			  <form class="form-horizontal" role="form" onsubmit="return false;">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">Offset:</label>
-				  <!-- okno za vpis -->
-				  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="0" >
+                  <label for="gen_ch1_freq" class="col-xs-4 control-label">Frequency:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_freq">
+                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_freq">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
-                  <div class="col-xs-4 col-sm-4">
-                    <select class="form-control" id="gen_ch1_sigtype">
-                      <option value="0">mV</option>
-                      <option value="1">V</option>
-                    </select>
-                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_freq_units">Hz</div>
                 </div>
               </form>
-			  <form class="form-horizontal" role="form" onsubmit="return false;">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">Amplitude:</label>
-				  <!-- okno za vpis -->
-				  <div class="col-xs-4 col-sm-4">
-                    <input type="text" autocomplete="off" class="form-control" value="0" >
+                  <label for="gen_ch1_dc" class="col-xs-4 control-label">DC offset:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_dc">
+                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_dc">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
-                  <div class="col-xs-4 col-sm-4">
-                    <select class="form-control" id="gen_ch1_sigtype">
-                      <option value="0">mV</option>
-                      <option value="1">V</option>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_dc_units">V</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="gen_ch1_trigmode" class="col-xs-4 control-label" style="white-space: nowrap;">Trigger mode:</label>
+                  <div class="col-xs-4 col-sm-7">
+                    <select class="form-control" id="gen_ch1_trigmode">
+                      <option value="0">Continuous</option>
+                      <option value="1">Single</option>
+                      <option value="2">External</option>
                     </select>
                   </div>
                 </div>
@@ -2215,9 +2269,11 @@
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="row">
                   <div class="col-xs-8 col-md-12 col-lg-8 col-sm-offset-4 col-md-offset-0 col-lg-offset-4">
-				  <!-- generate button ne dela -->
+                    <button id="gen_ch1_single" class="btn btn-primary" onclick="return postGenSingle(1)">
+                      <span class="glyphicon glyphicon-step-forward"></span> Single
+                    </button>
                     <button id="gen_ch1_upload" class="btn btn-primary" onclick="return showUploadForm(1)">
-                      Generate
+                      <span class="glyphicon glyphicon-upload"></span> File upload
                     </button>
                   </div>
                 </div>
@@ -2225,8 +2281,7 @@
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="checkbox" style="padding-top: 15px; padding-bottom: 12px;">
                   <label class="group-label">
-				  <!-- Advanced okno za naslednjic -->
-                    <input type="checkbox" id="gen_enable_ch1" checked> Advanced
+                    <input type="checkbox" id="gen_enable_ch2" checked> Channel 2
                   </label>
                 </div>
               </form>
