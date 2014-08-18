@@ -157,7 +157,7 @@
           params.local.trig_level = tlev;
           updateTriggerSlider(undefined, false);
           redrawPlot();
-          sendParams();
+          sendParams();  
         }
         else {
           $(this).val(params.local.trig_level)
@@ -284,7 +284,7 @@
         params.local.xmax = max;
                
         updateRanges();
-        sendParams(true);
+        sendParams(true); // ***
       }
     });
     
@@ -573,6 +573,20 @@
             
   });
   
+  /*
+  
+  
+  
+  POMOZNE FUNKCIJE ZA MAIN FUNKCIJO
+  
+  
+  
+  */
+  
+  
+  
+  
+  
   function startApp() {
     $.get(
       start_app_url
@@ -634,7 +648,7 @@
       last_get_failed = false;
       
       if(dresult.status === 'ERROR') {
-        if(! app_started) {
+        if(! app_started) { //**
           startApp();
         }
         else {
@@ -644,7 +658,7 @@
       else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
         // Check if the application started on the server is the same as on client
         if(app_id !== dresult.app.id) {
-          if(! app_started) {
+          if(! app_started) { 
             startApp();
           }
           else {
@@ -1644,16 +1658,13 @@
   }
   // funkcija za dinamicno tabelo
   
-  var measure = 0;
-  //$('#amp').html(parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
-  //var amp = (parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
-  
+  var measure = 0;  
   function Create()
 	{
 		var table = document.getElementById("tabelca");
 		measure = measure + 1;
 		var amp = document.getElementById("info_ch1_amp").innerHTML;
-		var freq = document.getElementById("info_ch1_min").innerHTML;
+		var freq = document.getElementById("info_ch1_freq").innerHTML;
 		var row = table.insertRow(-1);
 		var cellAmp = row.insertCell(0);
 		var cellPh = row.insertCell(1);
@@ -1672,15 +1683,15 @@
 			sleep(50);
 	}
 	
-	function CreateFunctionMS()
+	function CreateFunctionMS() // **
     {
 		var i;
-		for(i=0; i<100; i++)
+		for(i=0; i<20; i++)
 		{
 			Create();
-			sleep(5);
-			
-			
+
+			redrawPlot();
+						
 		}
 	}
 	
