@@ -687,9 +687,8 @@
           }
           
           // Redraw the plot using new datasets
-          plot.setData(filterData(datasets, plot.width()));
-          plot.setupGrid();
-          plot.draw();
+          //--------
+          newDraw();
         }
         
         if(! trig_dragging) {
@@ -1825,13 +1824,39 @@
  {
 	flag_table=1;
  }
- 
 
- 
- 
- 
- 
-  
+//------Start_of_Newcode
+function newDraw()
+ {
+    //plot.setData(filterData(datasets, plot.width())); //
+    plot.setData(getMytData()); //
+    plot.setupGrid();
+    plot.draw();
+ }
+
+ function getMyData(from, to) {
+    var rangedata = new Array();
+    for(var i=0; i<datasets.length; i++) {
+      if(! $('#btn_ch' + (i+1)).data('checked')) {
+        continue;
+      }
+      rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
+      for(var j=0; j<datasets[i].data.length; j++) {
+       /* if(datasets[i].data[j][0] > to) {
+          break;
+        }*/
+        //if(datasets[i].data[j][0] >= from) {
+          if(i == 0)
+            rangedata[rangedata.length - 1].data.push([j*2, j]);
+          else
+            rangedata[rangedata.length - 1].data.push([j*3, j]);
+        //}
+      }
+    }
+    rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+    return rangedata;
+  }
+//------End_of_Newcode
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
