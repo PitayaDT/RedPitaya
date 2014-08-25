@@ -926,12 +926,38 @@
 
     var timeu_lbl = (params.original.time_units == 0 ? 'μs' : (params.original.time_units == 1 ? 'ms' : 's'));
    // $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
-   var di=document.getElementById("apply_Yaxis").selectedIndex;
-	var ytitl=document.getElementById("apply_Yaxis").options[di].text;
-	$('#ytitle').text(ytitl);
-		var id=document.getElementById("apply_Xaxis").selectedIndex;
-	var xtitl=document.getElementById("apply_Xaxis").options[id].text;
-	$('#xtitle').text(xtitl);
+  
+  
+  if(flag_graph==1)
+	{
+		var di=document.getElementById("apply_Yaxis").selectedIndex;
+		var ytitl=document.getElementById("apply_Yaxis").options[di].text;
+		$('#ytitle').text(ytitl);
+			var id=document.getElementById("apply_Xaxis").selectedIndex;
+		var xtitl=document.getElementById("apply_Xaxis").options[id].text;
+		$('#xtitle').text(xtitl);
+		flag_graph=0;
+	}
+	
+	if(flag_table==1)
+	{
+		var i1 = document.getElementById("column_one").selectedIndex;
+		var i2 = document.getElementById("column_two").selectedIndex;
+		var i3 = document.getElementById("column_three").selectedIndex;
+		var i4 = document.getElementById("column_four").selectedIndex;
+		
+		i1 = document.getElementById("column_one").options[i1].text;
+		i2 = document.getElementById("column_two").options[i2].text;
+		i3 = document.getElementById("column_three").options[i3].text;
+		i4 = document.getElementById("column_four").options[i4].text;
+		
+		document.getElementById("c_1").innerHTML=i1;
+		document.getElementById("c_2").innerHTML=i2;
+		document.getElementById("c_3").innerHTML=i3;
+		document.getElementById("c_4").innerHTML=i4;
+		
+		flag_table=0;
+	}
   }
   
   function isParamChanged() {
@@ -1787,6 +1813,21 @@
 });
  
  
+ var flag_table = 0;
+ var flag_graph = 0;
+ 
+ function change_graph()
+ {
+	flag_graph=1;
+ }
+ 
+ function change_table()
+ {
+	flag_table=1;
+ }
+ 
+
+ 
  
  
  
@@ -1844,8 +1885,21 @@
         </div>
       </div>
 	  
-
 	  
+	  
+	  <div class="col-xs-12 col-sm-12 col-md-8">
+        <div class="table-holder well">
+          <table id="table">
+		    <tr>
+      			<th id="c_1">  </th>
+      			<th id="c_2">  </th>
+      			<th id="c_3">  </th>
+      			<th id="c_4">  </th>
+      		</tr>
+    	  </table><br>
+        </div>
+      </div>
+
 	  
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
         <div class="panel panel-default">
@@ -2096,7 +2150,7 @@
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#choose">
-                Choose wisely
+                Possible results
               </a>
             </h4>
           </div>
@@ -2203,7 +2257,8 @@
                   </div>
 			    </div>
 				<div>
-				  <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show table</button>
+				  <button id="btn_prep_table" class="btn btn-primary btn-lg" data-checked="true" onclick="change_table()">Prepare table</button>
+				  <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="add()">Show table</button>
 				</div>
               </form>
             </div>
@@ -2262,6 +2317,7 @@
                   </div>
 				</div>
                 <div>
+				  <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
 				  <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
 				</div>
               </form>
@@ -2270,7 +2326,7 @@
         </div>
 		
 		
-        <div class="panel panel-default">
+        <div hidden class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#range">
