@@ -17,7 +17,7 @@
   
   // Settings which can be modified
    
-  var app_id = 'scope+gen';  
+  var app_id = 'LCRmeter';  
   var root_url = '';
   //var root_url = 'http://10.0.1.221';      // Test local
   //var root_url = 'http://192.168.53.133';  // Test remote and local
@@ -687,8 +687,9 @@
           }
           
           // Redraw the plot using new datasets
-          //--------
-          newDraw();
+          plot.setData(filterData(datasets, plot.width()));
+          plot.setupGrid();
+          plot.draw();
         }
         
         if(! trig_dragging) {
@@ -1824,39 +1825,13 @@
  {
 	flag_table=1;
  }
+ 
 
-//------Start_of_Newcode
-function newDraw()
- {
-    //plot.setData(filterData(datasets, plot.width())); //
-    plot.setData(getMytData()); //
-    plot.setupGrid();
-    plot.draw();
- }
-
- function getMyData(from, to) {
-    var rangedata = new Array();
-    for(var i=0; i<datasets.length; i++) {
-      if(! $('#btn_ch' + (i+1)).data('checked')) {
-        continue;
-      }
-      rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
-      for(var j=0; j<datasets[i].data.length; j++) {
-       /* if(datasets[i].data[j][0] > to) {
-          break;
-        }*/
-        //if(datasets[i].data[j][0] >= from) {
-          if(i == 0)
-            rangedata[rangedata.length - 1].data.push([j*2, j]);
-          else
-            rangedata[rangedata.length - 1].data.push([j*3, j]);
-        //}
-      }
-    }
-    rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
-    return rangedata;
-  }
-//------End_of_Newcode
+ 
+ 
+ 
+ 
+  
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
@@ -1891,10 +1866,12 @@ function newDraw()
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
           </button>
         </div>
-        <button id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
-        <button id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
-        <button id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
-        <button id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
+		<div hidden>
+        <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
+        <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
+        <button hidden id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
+        <button hidden id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
+	    </div>
       </div>
     </div>
     <div class="row">
