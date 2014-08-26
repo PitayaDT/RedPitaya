@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -635,6 +635,7 @@
         else {
           showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
         }
+
       }
       else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
         // Check if the application started on the server is the same as on client
@@ -703,7 +704,7 @@
             $('#btn_single').prop('disabled', true);
           }
           update_timer = setTimeout(function() {
-            updateGraphData();
+            //updateGraphData();
           }, update_interval);
         }
         else {
@@ -722,7 +723,7 @@
       else {
         last_get_failed = true;
         downloading = false;
-        updateGraphData();  // One more try
+        //updateGraphData();  // One more try
       }
     })
     .always(function() {
@@ -1029,7 +1030,7 @@
         updateTriggerSlider();
         
         if(refresh_data && !downloading) {
-          updateGraphData();
+          //updateGraphData();
         } 
       }
       else if(dresult.status == 'ERROR') {
@@ -1813,8 +1814,8 @@
 });
  
  
- var flag_table = 0;
- var flag_graph = 0;
+ var flag_table = 1;
+ var flag_graph = 1;
  
  function change_graph()
  {
@@ -1827,7 +1828,9 @@
  }
  
 
- 
+ $(document).ready(function(e) {
+	$(".logo").click(function(e) { updateGraphData(); alert("dela"); });
+ });
  
  
  
@@ -1884,12 +1887,7 @@
           </div>
           <div id="plot_holder"></div>
           <div id="xtitle"></div>
-        </div>
-      </div>
-	  
-	  
-	  
-	  <div class="col-xs-12 col-sm-12 col-md-8">
+        </div>  
         <div class="table-holder well">
           <table id="table">
 		    <tr>
@@ -1900,9 +1898,7 @@
       		</tr>
     	  </table><br>
         </div>
-      </div>
-
-	  
+      </div>  
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
         <div class="panel panel-default">
           <div class="panel-heading">
@@ -1912,7 +1908,7 @@
               </a>
             </h4>
           </div>
-          <div id="meas_param" class="panel-collapse collapse in">
+          <div id="meas_param" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
@@ -1958,12 +1954,6 @@
             </div>
           </div>
         </div>
-		
-
-		
-
-		
-		
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -1972,16 +1962,18 @@
               </a>
             </h4>
           </div>
-          <div id="sweep_func" class="panel-collapse collapse in">
+          <div id="sweep_func" class="panel-collapse collapse">
             <div class="panel-body">
 			  <form class="form-horizontal" role="form" onsubmit="return false;">
 			  
 			    <div class="panel-heading">
 			      <h4 class="panel-title">
-					  <a data-toggle="collapse" href="#meas_sweep">Measurement sweep</a>
+					  <a data-toggle="collapse" href="#meas_sweep">
+					    Measurement sweep
+					  </a>
 				  </h4>
 			    </div>
-				<div id="meas_sweep" class="panel-collapse collapse in">
+				<div id="meas_sweep" class="panel-collapse collapse">
                   <div class="form-group">
                     <label for="gen_ms_freq" class="col-xs-4 control-label">Frequency:</label>
                     <div class="col-xs-5">
@@ -2055,10 +2047,12 @@
 				
 				<div class="panel-heading">
 			      <h4 class="panel-title">
-					<a data-toggle="collapse" href="#freq_sweep">Frequency sweep</a>
+					<a data-toggle="collapse" href="#freq_sweep">
+					  Frequency sweep
+					  </a>
 				  </h4>
 			    </div>
-				<div id="freq_sweep" class="panel-collapse collapse in">
+				<div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
                     <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start f.:</label>
                     <div class="col-xs-5">
@@ -2144,15 +2138,11 @@
             </div>
           </div>
         </div>
-		
-
-		
-		
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#choose">
-                Possible results
+                Choose wisely
               </a>
             </h4>
           </div>
@@ -2182,9 +2172,6 @@
 			</div>
 		  </div>
 		</div>
-		
-		
-		
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2193,7 +2180,7 @@
               </a>
             </h4>
           </div>
-          <div id="table_meas" class="panel-collapse collapse in">
+          <div id="table_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
@@ -2266,11 +2253,6 @@
             </div>
           </div>
         </div>
-		
-		
-		
-		<!--*********-->
-
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2279,7 +2261,7 @@
               </a>
             </h4>
           </div>
-          <div id="plot_meas" class="panel-collapse collapse in">
+          <div id="plot_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
 			    <div class="form-group">
@@ -2326,8 +2308,6 @@
             </div>
           </div>
         </div>
-		
-		
         <div hidden class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2404,7 +2384,7 @@
               </form>
             </div>
           </div>
-        </div>     
+        </div> 
       </div>
     </div>
     <div class="footer clearfix">
