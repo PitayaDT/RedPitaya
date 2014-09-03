@@ -1,22 +1,9 @@
-<!-- $Id$
- *
- * Red Pitaya Generator & Oscilloscope client.
- *
- * Author: Dakus <info@eskala.eu>
- *         
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in Javascript & HTML.
- * Please visit http://en.wikipedia.org/wiki/JavaScript
- *              http://en.wikipedia.org/wiki/HTML
- * for more details on the languages used herein.
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generator & Oscilloscope_test</title>
+  <title>scope_test_2</title>
   <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
   <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
   <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
@@ -30,7 +17,7 @@
   
   // Settings which can be modified
    
-  var app_id = 'scope_test';  
+  var app_id = 'scope_test';
   var root_url = '';
   //var root_url = 'http://10.0.1.221';      // Test local
   //var root_url = 'http://192.168.53.133';  // Test remote and local
@@ -44,7 +31,8 @@
   var update_interval = 50;              // Update interval for PC, milliseconds
   var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds 
   var request_timeout = 3000;            // Milliseconds
-  var long_timeout = 20000;              // Milliseconds
+  var long_timeout = 0000;              // Milliseconds
+  var long_timeout = 40000;              // Milliseconds
   var meas_panel_dec = 5;                // Decimation for numerical measure panel to make it human readable
   var meas_panel_dec_mobdev = 1;         // Decimation for numerical measure panel for mobile devices
   var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
@@ -86,18 +74,20 @@
   var autorun = 1;
   var datasets = [];
   var plot = null;
+  var measurement_start = 0;
+
   var params = {
     original: null,
-    local: null
+    local: null,
+    measurement_start: null
   };
   
   // Default parameters - posted after server side app is started 
   var def_params = {
     en_avg_at_dec: 0
-  }; 
+  };
     
   // On page loaded
-  
   $(function() {
     
     // Show different buttons on touch screens    
@@ -580,7 +570,8 @@
             
   });
   
-  function startApp() {
+  function startApp(){
+      alert("Start App");
     $.get(
       start_app_url
     )
@@ -595,7 +586,7 @@
         )
         .done(function(dresult) {
           app_started = true;
-          updateGraphData();      
+          updateGraphData();
         })
         .fail(function() {
           showModalError('Could not initialize the application with default parameters.', false, true);
@@ -648,6 +639,7 @@
         else {
           showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
         }
+
       }
       else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
         // Check if the application started on the server is the same as on client
@@ -716,7 +708,7 @@
             $('#btn_single').prop('disabled', true);
           }
           update_timer = setTimeout(function() {
-            updateGraphData();
+            //updateGraphData();
           }, update_interval);
         }
         else {
@@ -735,7 +727,7 @@
       else {
         last_get_failed = true;
         downloading = false;
-        updateGraphData();  // One more try
+        //updateGraphData();  // One more try
       }
     })
     .always(function() {
@@ -914,9 +906,6 @@
     $('#gen_ch2_freq').val(floatToLocalString(params.original.gen_sig_freq_ch2));
     $('#gen_ch2_dc').val(floatToLocalString(params.original.gen_sig_dcoff_ch2));
     $('#gen_ch2_trigmode').val(params.original.gen_trig_mod_ch2);
-
-    //New code
-    $('#b_wait').val(params.original.b_wait);
     
     $('#gen_ch1_single').prop('disabled', (params.original.gen_trig_mod_ch1 == 1 ? false : true));
     $('#gen_ch2_single').prop('disabled', (params.original.gen_trig_mod_ch2 == 1 ? false : true));    
@@ -930,8 +919,9 @@
     
     updateTimeUnits(orig_params);
     $('#ytitle').show();
-  }
   
+  }
+  //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
     if(! $.isPlainObject(new_params)) {
       return;
@@ -940,7 +930,39 @@
     params.original.time_units = params.local.time_units = new_params.time_units;
 
     var timeu_lbl = (params.original.time_units == 0 ? 'μs' : (params.original.time_units == 1 ? 'ms' : 's'));
-    $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
+   // $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
+  
+  
+  if(flag_graph==1)
+  {
+    var di=document.getElementById("apply_Yaxis").selectedIndex;
+    var ytitl=document.getElementById("apply_Yaxis").options[di].text;
+    $('#ytitle').text(ytitl);
+      var id=document.getElementById("apply_Xaxis").selectedIndex;
+    var xtitl=document.getElementById("apply_Xaxis").options[id].text;
+    $('#xtitle').text(xtitl);
+    flag_graph=0;
+  }
+  
+  if(flag_table==1)
+  {
+    var i1 = document.getElementById("column_one").selectedIndex;
+    var i2 = document.getElementById("column_two").selectedIndex;
+    var i3 = document.getElementById("column_three").selectedIndex;
+    var i4 = document.getElementById("column_four").selectedIndex;
+    
+    i1 = document.getElementById("column_one").options[i1].text;
+    i2 = document.getElementById("column_two").options[i2].text;
+    i3 = document.getElementById("column_three").options[i3].text;
+    i4 = document.getElementById("column_four").options[i4].text;
+    
+    document.getElementById("c_1").innerHTML=i1;
+    document.getElementById("c_2").innerHTML=i2;
+    document.getElementById("c_3").innerHTML=i3;
+    document.getElementById("c_4").innerHTML=i4;
+    
+    flag_table=0;
+  }
   }
   
   function isParamChanged() {
@@ -954,11 +976,8 @@
     return false;
   }
   
-  function sendParams(refresh_data, force_send, single_btn) 
-  {
-  
-    if(sending || (force_send !== true && !isParamChanged())) 
-    {
+  function sendParams(refresh_data, force_send, single_btn) {
+    if(sending || (force_send !== true && !isParamChanged())) {
       send_que = sending;
       return;
     }
@@ -1015,7 +1034,7 @@
         updateTriggerSlider();
         
         if(refresh_data && !downloading) {
-          updateGraphData();
+          //updateGraphData();
         } 
       }
       else if(dresult.status == 'ERROR') {
@@ -1065,6 +1084,8 @@
   // Use only data for selected channels and do downsamling (data decimation), which is required for 
   // better performance. On the canvas cannot be shown too much graph points. 
   function filterData(dsets, points) {
+      alert("dsets");
+
     var filtered = [];
     var num_of_channels = 2;
 
@@ -1197,11 +1218,11 @@
             yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
           })
         );
-        updateTriggerSlider();        
+        updateTriggerSlider();
       }
     }
   }
-  
+
   function setVisibleChannels(btn) {
     var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
     var btn = $(btn);
@@ -1791,89 +1812,73 @@
     value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
     return value + unit;
   }
-  //New code
-  function wait()
-  {
-    if(params.local.b_wait == 1)
-      params.local.b_wait = 0;
-    else
-      params.local.b_wait = 1;
-  }
+  
+  $(function(){
+    $('.btn-choose').click(function() { 
+        $(this).toggleClass('stay-active');
+    });
+});
+ 
+ 
+ var flag_table = 1;
+ var flag_graph = 1;
+ 
+ function change_graph()
+ {
+  flag_graph=1;
+ }
+ 
+ function change_table()
+ {
+  flag_table=1;
+ }
+ 
 
-  // New code copyed from RedPitaya/Applications/LCRmeter/index.html
-  //---------------------------------------------------------------
-  var measure = 0;
-  //$('#amp').html(parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
-  //var amp = (parseLocalFloat(shortenFloat(params.original.meas_amp_ch1)));
-  
-  function Create()
-  {
-    var table = document.getElementById("tabelca");
-    measure = measure + 1;
-    var amp = document.getElementById("info_ch1_amp").innerHTML;
-    var freq = document.getElementById("info_ch1_freq").innerHTML;
-    var row = table.insertRow(-1);
-    var cellAmp = row.insertCell(0);
-    var cellPh = row.insertCell(1);
-    var cellFrq = row.insertCell(2);
-    var cellMsr = row.insertCell(3);
-    cellAmp.innerHTML = amp;//Num;
-    cellPh.innerHTML = "20";
-    cellFrq.innerHTML = freq;
-    cellMsr.innerHTML = measure;
-    
-  }
-  
-  function CreateFunction()
-    {
-      Create();
-      sleep(50);
-  }
-  
-  function CreateFunctionMS()
-    {
-    var i;
-    for(i=0; i<100; i++)
-    {
-      Create();
-      sleep(5);
-      
-      
-    }
-  }
-  
-  function sleep(milliseconds)
-  {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++)
-    {
-      if ((new Date().getTime() - start) > milliseconds)
-      {
-        break;
+/* $(document).ready(function(e) {
+  $(".logo").click(function(e) { updateGraphData(); });
+ });*/
+
+ function measure(){
+     measurement_start=1;
+     updateGraphData();
+
+  /*    var valuesss = prompt("Vnesi cifre","recimo 100 10 120 11 130 12");
+      var splitValue = valuesss.split(" ");
+      alert(splitValue);
+      var valuesX = new Array();
+      var valuesY = new Array();
+      var indexX=0;
+      var indexY=0;
+      for(var i=0; i<splitValue.length; i+=2){
+          valuesX[indexX] = splitValue[i];
+          indexX++;
       }
-    }
-    }
-  
-  function calibrate()
-  {
-    var c = confirm("Open calibration");
-    if(c == true)
-    {
-      var r = confirm("Closed calibration");
-    }
-    if(r == true)
-    {
-      alert("Calibration complete");
-    }
-    else
-    {
-      alert("Calibration skipped");
-    }
+      for(var i=1; i<splitValue.length; i+=2 ){
+        valuesY[indexY] = splitValue[i];
+        indexY++;
+      }
+
+      alert("Vrednisti X " + valuesX +  "Vrednsoti Y " + valuesY);
+      valuesss;
+
+       var options = plot.getOptions();
+          plot = $.plot(
+                  plot.getPlaceholder(),
+                  filterData(valuesss, plot.width()),
+                  $.extend(true, plot_options, {
+                      xaxis: { min: options.xaxes[0].min, max: options.xaxes[0].max },
+                      yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
+                  })
+          );
+          updateTriggerSlider();
+
+  //1. pošlji parametre na funkcijo
+  //2. sprejmi podatke
+  //3. preveri konsistentnost
+  //4. v loopu jih zriši
+*/
   }
 
-  //-------------------------------------------------------
-
-  
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
@@ -1882,7 +1887,7 @@
     <div class="container">
       <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
       <img class="logo pull-left" src="../assets/images/logo_white.png">
-      <h2 class="page-title">Generator & Oscilloscope_test</h2>
+      <h2 class="page-title">LCR meter</h2>
     </div>
   </div>
   <div class="container">
@@ -1908,107 +1913,450 @@
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
           </button>
         </div>
-        <button id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
-        <button id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
-        <button id="wait" class="btn btn-primary btn-lg" data-checked="true" onclick="wait()">wait</button>
-        <button id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
-        <button id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
+        <button id="btn_measure" class="btn btn-primary btn-lg" data-autozoom="false" onclick="measure()">
+            <span class="glyphicon glyphicon-refresh"></span> Measure
+        </button>
+
+          <div hidden>
+        <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
+        <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
+        <button hidden id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
+        <button hidden id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
+      </div>
       </div>
     </div>
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-8">
         <div class="graph-holder well well-small">
-          <div id="ytitle">Voltage [ V ]</div>
+          <div id="ytitle"></div>
           <div id="trigger_cnv_holder">
             <canvas id="trigger_canvas" width="25" height="460"></canvas>
             <div id="trigger_tooltip"></div>
           </div>
           <div id="plot_holder"></div>
           <div id="xtitle"></div>
+        </div>  
+        <div class="table-holder well">
+          <table id="table">
+        <tr>
+            <th id="c_1">  </th>
+            <th id="c_2">  </th>
+            <th id="c_3">  </th>
+            <th id="c_4">  </th>
+          </tr>
+        </table><br>
         </div>
-      </div>
-      <!--New code -->
-
-      <div class="col-xs-12 col-sm-12 col-md-8">
-        <div class="graph-holder well well-small">
-          <table id="tabelca">
-            <tr>
-              <th> Amplitude |Z| </th>
-              <th> Phase /°</th>
-              <th> Frequency /Hz</th>
-              <th> Measurement </th>
-            </tr>
-          </table><br>
-          <button id="btn_cal" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
-          <button id="btn_start2" class="btn btn-primary btn-lg" data-checked="true" onclick="CreateFunction()">Start</button>
-        </div>
-      </div> 
-
-      <!--New code -->
+      </div>  
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
-              <a data-toggle="collapse" href="#trigger">
-                Trigger
+              <a data-toggle="collapse" href="#meas_param">
+                Measurement parameters
               </a>
             </h4>
           </div>
-          <div id="trigger" class="panel-collapse collapse in">
+          <div id="meas_param" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="trig_source" class="col-xs-4 control-label">Source:</label>
-                  <div class="col-xs-8">
-                    <select id="trig_source" class="form-control">
-                      <option value="0">Channel 1</option>
-                      <option value="1">Channel 2</option>
-                      <option value="2">External</option>
-                    </select>
+                  <label for="gen_amp" class="col-xs-4 control-label">Amplitude:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="1" id="gen_amp">
+                    <span style="display: none;" class="input-group-btn" id="apply_gen_amp">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+          <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_amp_unit">V</div>
+                </div>
+                <div class="form-group">
+                  <label for="gen_avg" class="col-xs-4 control-label">Averaging:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="1" id="gen_avg">
+                    <span style="display: none;" class="input-group-btn" id="apply_gen_avg">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="trig_mode" class="col-xs-4 control-label">Mode:</label>
-                  <div class="col-xs-8">
-                    <select id="trig_mode" class="form-control">
-                      <option value="0">Auto</option>
-                      <option value="1">Normal</option>
-                      <option value="2">Single</option>
-                    </select>
+                  <label for="gen_DC_bias" class="col-xs-4 control-label">DC Bias:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_DC_bias">
+                    <span style="display: none;" class="input-group-btn" id="apply_gen_DC_bias">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
+          <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_DC_bias_unit">V</div>
                 </div>
                 <div class="form-group">
-                  <label for="trig_edge" class="col-xs-4 control-label">Edge:</label>
-                  <div class="col-xs-8">
-                    <select id="trig_edge" class="form-control">
-                      <option value="0">Rising</option>
-                      <option value="1">Falling</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="trig_level" class="col-xs-4 control-label">Level:</label>
+                  <label for="gen_R_shunt" class="col-xs-4 control-label">R_shunt:</label>
                   <div class="col-xs-5">
-                    <input type="text" id="trig_level" value="0" class="form-control" autocomplete="off">
-                    <span id="apply_trig_level" class="input-group-btn" style="display: none;">
+                    <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_R_shunt">
+                    <span id="apply_gen_R_shunt" class="input-group-btn" style="display: none;">
                       <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div id="trig_lev_units" class="col-xs-3" style="padding: 7px 0 0;">V</div>
+                  <div id="R_shunt_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                 </div>
               </form>
-              <div class="row">
-                <div class="col-xs-4"> </div>
-                <div class="col-xs-5">
-                  <button id="btn_single" class="btn btn-primary" onclick="singleUpdate()" disabled>
-                    <span class="glyphicon glyphicon-step-forward"></span> Single
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-        <div class="panel panel-default">
+    <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#sweep_func">
+                Sweep functions
+              </a>
+            </h4>
+          </div>
+          <div id="sweep_func" class="panel-collapse collapse">
+            <div class="panel-body">
+        <form class="form-horizontal" role="form" onsubmit="return false;">
+        
+          <div class="panel-heading">
+            <h4 class="panel-title">
+            <a data-toggle="collapse" href="#meas_sweep">
+              Measurement sweep
+            </a>
+          </h4>
+          </div>
+        <div id="meas_sweep" class="panel-collapse collapse">
+                  <div class="form-group">
+                    <label for="gen_ms_freq" class="col-xs-4 control-label">Frequency:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_ms_freq">
+                      <span id="apply_gen_ms_freq" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+                  </div>
+          <div class="form-group">
+                    <label for="gen_ms_step" class="col-xs-4 control-label">Step:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="1" id="gen_ms_step">
+                      <span id="apply_gen_ms_step" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                  </div>
+          <div class="form-group">
+            <label for="gen_ms_wait" class="col-xs-4 control-label">Wait:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_ms_wait">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                      </select>
+                  </div>
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_fs_OSCalib">
+                        <option value="0">Yes</option>
+                        <option value="1">No</option>
+                      </select>
+                    </div>
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_fs_LoadCalib">
+                        <option value="0">Yes</option>
+                        <option value="1">No</option>
+                      </select>
+                    </div>
+          </div>
+          <div class="form-group">
+                    <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
+                      <span id="apply_gen_fs_LoadRe" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="fs_LoadRe_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
+                  </div>
+          <div class="form-group">
+                    <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
+                      <span id="apply_gen_fs_LoadIm" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
+                  </div>
+          <div>
+          <button id="btn_start_MS" class="btn btn-primary btn-lg" data-checked="true" onclick="">Start</button>
+          </div>
+        </div>
+        
+        <div class="panel-heading">
+            <h4 class="panel-title">
+          <a data-toggle="collapse" href="#freq_sweep">
+            Frequency sweep
+            </a>
+          </h4>
+          </div>
+        <div id="freq_sweep" class="panel-collapse collapse">
+                  <div class="form-group">
+                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start f.:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fs_Sfreq">
+                      <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+                  </div>
+          <div class="form-group">
+                    <label for="gen_fs_Efreq" class="col-xs-4 control-label">Stop f.:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fs_Efreq">
+                      <span id="apply_gen_fs_Efreq" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+                  </div>
+          <div class="form-group">
+                    <label for="gen_fs_step" class="col-xs-4 control-label">Step:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="1" id="gen_fs_step">
+                      <span id="apply_gen_fs_step" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                  </div>
+          <div class="form-group">
+            <label for="gen_fs_scale" class="col-xs-4 control-label">Scale:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_fs_scale">
+                        <option value="0">Lin</option>
+                        <option value="1">Log</option>
+                      </select>
+                  </div>
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_fs_OSCalib">
+                        <option value="0">Yes</option>
+                        <option value="1">No</option>
+                      </select>
+                    </div>
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_fs_LoadCalib">
+                        <option value="0">Yes</option>
+                        <option value="1">No</option>
+                      </select>
+                    </div>
+          </div>
+          <div class="form-group">
+                    <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
+                      <span id="apply_gen_fs_LoadRe" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="fs_LoadRe_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
+                  </div>
+          <div class="form-group">
+                    <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
+                      <span id="apply_gen_fs_LoadIm" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
+                  </div>
+          <div>
+          <button id="btn_start_MS" class="btn btn-primary btn-lg" data-checked="true" onclick="">Start</button>
+          </div>
+        </div>
+        
+              </form>
+            </div>
+          </div>
+        </div>
+    <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#choose">
+                Choose wisely
+              </a>
+            </h4>
+          </div>
+      <div id="choose" class="panel-collapse collapse">
+            <div class="panel-body">
+        <form class="form-horizontal" role="form" onsubmit="return false;">
+        <div>
+            <button id="Rs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rs</button>
+          <button id="Ls_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Ls</button>
+          <button id="Cp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cp</button>
+          <button id="Cs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cs</button>
+        </div>
+        <div></div>
+        <div>
+          <button id="Rp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rp</button>
+          <button id="Q_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Q</button>
+          <button id="D_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">D</button>
+          <button id="Y_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Y</button>
+        </div>
+        <div>
+          <button id="Z_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Z</button>
+          <button id="Zz_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Z|</button>
+          <button id="Yy_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Y|</button>
+          <button id="lol_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">:)</button>
+        </div>
+        </form>
+      </div>
+      </div>
+    </div>
+    <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#table_meas">
+                Table of measurements
+              </a>
+            </h4>
+          </div>
+          <div id="table_meas" class="panel-collapse collapse">
+            <div class="panel-body">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+            <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_one">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
+                    </select>
+                  </div>
+          <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_two">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
+                    </select>
+                  </div>
+          <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_three">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
+                    </select>
+                  </div>
+            <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_four">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
+                    </select>
+                  </div>
+          </div>
+        <div>
+          <button id="btn_prep_table" class="btn btn-primary btn-lg" data-checked="true" onclick="change_table()">Prepare table</button>
+          <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="add()">Show table</button>
+        </div>
+              </form>
+            </div>
+          </div>
+        </div>
+    <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#plot_meas">
+                Plot measurements
+              </a>
+            </h4>
+          </div>
+          <div id="plot_meas" class="panel-collapse collapse">
+            <div class="panel-body">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+          <div class="form-group">
+          <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
+            <div class="col-xs-4 col-sm-5">
+                    <select class="form-control" id="apply_Xaxis">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
+                    </select>
+                  </div>
+        </div>
+        <div class="form-group">
+          <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
+            <div class="col-xs-4 col-sm-5">
+                    <select class="form-control" id="apply_Yaxis">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
+                    </select>
+                  </div>
+        </div>
+                <div>
+          <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
+          <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
+        </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div hidden class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#range">
@@ -2084,286 +2432,7 @@
               </form>
             </div>
           </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#measure">
-                Measure
-              </a>
-            </h4>
-          </div>
-          <div id="measure" class="panel-collapse collapse">
-            <div class="panel-body">
-              <div class="row group-label">
-                <div class="col-xs-6" style="text-align: center">Channel 1</div>
-                <div class="col-xs-6" style="text-align: center">Channel 2</div>
-              </div>
-              <div class="row">
-                <div class="col-xs-3 txt-right">Min:</div>
-                <div class="col-xs-3"><span id="info_ch1_min">-</span><span class="unit">V</span></div>
-                <div class="col-xs-3 txt-right">Min:</div>
-                <div class="col-xs-3"><span id="info_ch2_min">-</span><span class="unit">V</span></div>
-              </div>
-              <div class="row">
-                <div class="col-xs-3 txt-right">Max:</div>
-                <div class="col-xs-3"><span id="info_ch1_max">-</span><span class="unit">V</span></div>
-                <div class="col-xs-3 txt-right">Max:</div>
-                <div class="col-xs-3"><span id="info_ch2_max">-</span><span class="unit">V</span></div>
-              </div>
-              <div class="row">
-                <div class="col-xs-3 txt-right">Amp:</div>
-                <div class="col-xs-3"><span id="info_ch1_amp">-</span><span class="unit">Vpp</span></div>
-                <div class="col-xs-3 txt-right">Amp:</div>
-                <div class="col-xs-3"><span id="info_ch2_amp">-</span><span class="unit">Vpp</span></div>
-              </div>
-              <div class="row">
-                <div class="col-xs-3 txt-right">Avg:</div>
-                <div class="col-xs-3"><span id="info_ch1_avg">-</span><span class="unit">V</span></div>
-                <div class="col-xs-3 txt-right">Avg:</div>
-                <div class="col-xs-3"><span id="info_ch2_avg">-</span><span class="unit">V</span></div>
-              </div>
-              <div class="row">
-                <div class="col-xs-3 txt-right">Freq:</div>
-                <div class="col-xs-3" id="info_ch1_freq">-<span class="unit">Hz</span></div>
-                <div class="col-xs-3 txt-right">Freq:</div>
-                <div class="col-xs-3" id="info_ch2_freq">-<span class="unit">Hz</span></div>
-              </div>
-              <div class="row">
-                <div class="col-xs-3 txt-right">Period:</div>
-                <div class="col-xs-3" id="info_ch1_period">-<span class="unit">s</span></div>
-                <div class="col-xs-3 txt-right">Period:</div>
-                <div class="col-xs-3" id="info_ch2_period">-<span class="unit">s</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#gain">
-                Gain settings
-              </a>
-            </h4>
-          </div>
-          <div id="gain" class="panel-collapse collapse">
-            <div class="panel-body">
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="group-label" style="padding-bottom: 10px;">Channel 1</div>
-                <div class="form-group">
-                  <label for="gain_ch1_att" class="col-xs-4 col-sm-6 control-label">Probe attenuation:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch1_att">
-                      <option value="0">1x</option>
-                      <option value="1">10x</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="gain_ch1_sett" class="col-xs-4 col-sm-6 control-label">Gain setting:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch1_sett">
-                      <option value="0">LV</option>
-                      <option value="1">HV</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="group-label" style="padding: 10px 0;">Channel 2</div>
-                <div class="form-group">
-                  <label for="gain_ch2_att" class="col-xs-4 col-sm-6 control-label">Probe attenuation:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch2_att">
-                      <option value="0">1x</option>
-                      <option value="1">10x</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="gain_ch2_sett" class="col-xs-4 col-sm-6 control-label">Gain setting:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="gain_ch2_sett">
-                      <option value="0">LV</option>
-                      <option value="1">HV</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#generator">
-                Signal generator
-              </a>
-            </h4>
-          </div>
-          <div id="generator" class="panel-collapse collapse">
-            <div class="panel-body">
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="checkbox" style="padding-bottom: 12px;">
-                  <label class="group-label">
-                    <input type="checkbox" id="gen_enable_ch1" checked> Channel 1
-                  </label>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">Signal type:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch1_sigtype">
-                      <option value="0">Sine</option>
-                      <option value="1">Square</option>
-                      <option value="2">Triangle</option>
-                      <option value="3">From file</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch1_ampl" class="col-xs-4 control-label">Amplitude:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_ampl">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_ampl">
-                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                    </span>
-                  </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_ampl_units">Vpp</div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch1_freq" class="col-xs-4 control-label">Frequency:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_freq">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_freq">
-                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                    </span>
-                  </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_freq_units">Hz</div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch1_dc" class="col-xs-4 control-label">DC offset:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_dc">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_dc">
-                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                    </span>
-                  </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_dc_units">V</div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch1_trigmode" class="col-xs-4 control-label" style="white-space: nowrap;">Trigger mode:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch1_trigmode">
-                      <option value="0">Continuous</option>
-                      <option value="1">Single</option>
-                      <option value="2">External</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="row">
-                  <div class="col-xs-8 col-md-12 col-lg-8 col-sm-offset-4 col-md-offset-0 col-lg-offset-4">
-                    <button id="gen_ch1_single" class="btn btn-primary" onclick="return postGenSingle(1)">
-                      <span class="glyphicon glyphicon-step-forward"></span> Single
-                    </button>
-                    <button id="gen_ch1_upload" class="btn btn-primary" onclick="return showUploadForm(1)">
-                      <span class="glyphicon glyphicon-upload"></span> File upload
-                    </button>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="checkbox" style="padding-top: 15px; padding-bottom: 12px;">
-                  <label class="group-label">
-                    <input type="checkbox" id="gen_enable_ch2" checked> Channel 2
-                  </label>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch2_sigtype" class="col-xs-4 control-label">Signal type:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch2_sigtype">
-                      <option value="0">Sine</option>
-                      <option value="1">Square</option>
-                      <option value="2">Triangle</option>
-                      <option value="3">From file</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch2_ampl" class="col-xs-4 control-label">Amplitude:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch2_ampl">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch2_ampl">
-                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                    </span>
-                  </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch2_ampl_units">Vpp</div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch2_freq" class="col-xs-4 control-label">Frequency:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch2_freq">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch2_freq">
-                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                    </span>
-                  </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch2_freq_units">Hz</div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch2_dc" class="col-xs-4 control-label">DC offset:</label>
-                  <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch2_dc">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch2_dc">
-                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                    </span>
-                  </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch2_dc_units">V</div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch2_trigmode" class="col-xs-4 control-label" style="white-space: nowrap;">Trigger mode:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch2_trigmode">
-                      <option value="0">Continuous</option>
-                      <option value="1">Single</option>
-                      <option value="2">External</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="row">
-                  <div class="col-xs-8 col-md-12 col-lg-8 col-sm-offset-4 col-md-offset-0 col-lg-offset-4">
-                    <button id="gen_ch2_single" class="btn btn-primary" onclick="return postGenSingle(2)">
-                      <span class="glyphicon glyphicon-step-forward"></span> Single
-                    </button>
-                    <button id="gen_ch2_upload" class="btn btn-primary" onclick="return showUploadForm(2)">
-                      <span class="glyphicon glyphicon-upload"></span> File upload
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        </div> 
       </div>
     </div>
     <div class="footer clearfix">
