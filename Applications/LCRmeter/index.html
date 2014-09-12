@@ -1827,6 +1827,8 @@
 	flag_table=1;
  }
  
+ 
+
  /*
 
  $(document).ready(function(e) {
@@ -1834,6 +1836,20 @@
  });
  
  */
+ 
+ 
+ 
+    function selectAmpPhase(toolname) {
+    $('#toggle .btn').removeClass('btn-primary').addClass('btn-default');
+    $(this).toggleClass('btn-default btn-primary');
+  
+    if(toolname == 'amp') {
+    }
+    if(toolname == 'phase') {
+    }
+    else if(toolname == 'pan') {
+    }
+  }
  
   
   </script>
@@ -1867,6 +1883,20 @@
             <span class="glyphicon glyphicon-move"></span>
           </button>
           <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
+            <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
+          </button>
+        </div>
+		<div id="toggle" class="btn-group" data-toggle="buttons">
+          <button id="btn_a" class="btn btn-primary" onclick="selectAmpPhase.call(this, 'amp')" style="display: none">
+            <span>Amp</span>
+          </button>
+          <button id="btn_pan" class="btn btn-primary" onclick="selectAmpPhase.call(this, 'amp')" style="display: none">
+            <span>Amp</span>
+          </button>
+          <button id="btn_pan" class="btn btn-default" onclick="selectAmpPhase.call(this, 'pan')" style="display: none">
+            <span>Phase</span>
+          </button>
+          <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectAmpPhase.call(this, 'toggle')" style="display: none">
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
           </button>
         </div>
