@@ -1825,6 +1825,8 @@
  function change_table()
  {
 	flag_table=1;
+	myApp.showPleaseWait();
+	setTimeout(function(){myApp.hidePleaseWait();}, 10000);
  }
  
  
@@ -1850,6 +1852,29 @@
     else if(toolname == 'pan') {
     }
   }
+ 
+   $('#pleaseWaitDialog').css({
+    'background-image': 'none',
+    'background-color': 'red'
+});
+ 
+ 
+ var myApp;
+myApp = myApp || (function () {
+    var pleaseWaitDiv = $('<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1>Measuring...</h1></div><div class="modal-body"><div class="progress progress-striped active"><div class="progress-bar" style="width: 100%;"></div></div></div></div></div></div>');
+    return {
+        showPleaseWait: function() {
+            pleaseWaitDiv.modal();
+        },
+        hidePleaseWait: function () {
+            pleaseWaitDiv.modal('hide');
+        },
+
+    };
+})();
+ 
+ 
+ 
  
   
   </script>
@@ -1909,6 +1934,16 @@
       </div>
     </div>
     <div class="row">
+	<div class="modal hide" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-header">
+            <h1>Measuring...</h1>
+        </div>
+        <div class="modal-body">
+            <div class="progress progress-striped active">
+                <div class="bar" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
       <div class="col-xs-12 col-sm-12 col-md-8">
         <div class="graph-holder well well-small">
           <div id="ytitle"></div>
@@ -2299,6 +2334,7 @@
 				  <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
 			      <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Xaxis">
+					<!--
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
 					  <option value="2">Cp</option>
@@ -2310,6 +2346,8 @@
 					  <option value="8">Z</option>
 					  <option value="9">|Z|</option>
 					  <option value="10">|Y|</option>
+					  -->
+					  <option value="11">f</option>
                     </select>
                   </div>
 				</div>
@@ -2317,6 +2355,7 @@
 				  <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
 			      <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Yaxis">
+					<!--
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
 					  <option value="2">Cp</option>
@@ -2325,9 +2364,13 @@
 					  <option value="5">Q</option>
 					  <option value="6">D</option>
 					  <option value="7">Y</option>
+					  -->
 					  <option value="8">Z</option>
+					  <!--
 					  <option value="9">|Z|</option>
 					  <option value="10">|Y|</option>
+					  -->
+					  <option value="11">P</option>
                     </select>
                   </div>
 				</div>
