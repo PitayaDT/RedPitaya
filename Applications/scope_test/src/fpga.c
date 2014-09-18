@@ -1,15 +1,10 @@
-/**
+/** @file fpga.c
+ *
  * $Id: fpga.c 881 2013-12-16 05:37:34Z rp_jmenart $
  *
  * @brief Red Pitaya Oscilloscope FPGA Interface.
- *
- * @Author Jure Menart <juremenart@gmail.com>
- *         
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
+ * @author Jure Menart <juremenart@gmail.com>
+ * @copyright Red Pitaya  http://www.redpitaya.com
  */
 
 #include <stdio.h>
@@ -179,7 +174,7 @@ int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
                            int ch1_calib_dc_off, float ch1_user_dc_off,
                            int ch2_calib_dc_off, float ch2_user_dc_off,
                            int ch1_probe_att, int ch2_probe_att,
-                           int ch1_gain, int ch2_gain,
+			    int ch1_gain, int ch2_gain,
                            int enable_avg_at_dec)
 {
     /* TODO: Locking of memory map */
@@ -210,11 +205,22 @@ int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     uint32_t gain_lo_chb_filt_pp=0x2666;
     uint32_t gain_lo_chb_filt_kk=0xd9999a;    
     
+  
+    
+
+    
+
     if(trig_source == 0) {
+        
+            
+
         fpga_trig_thr = osc_fpga_cnv_v_to_cnt(trig_level, ch1_adc_max_v,
                                               ch1_calib_dc_off, ch1_user_dc_off);
         //fprintf(stderr, "Trigger source [V] -> cnts: %f -> %d (max ADC V: %f)\n", trig_level, fpga_trig_thr, ch1_adc_max_v);
     } else {
+       
+        
+
         fpga_trig_thr = osc_fpga_cnv_v_to_cnt(trig_level, ch2_adc_max_v,
                                               ch2_calib_dc_off, ch2_user_dc_off);
         //fprintf(stderr, "Trigger source [V] -> cnts: %f -> %d (max ADC V: %f)\n", trig_level, fpga_trig_thr, ch2_adc_max_v);
@@ -616,6 +622,7 @@ float osc_fpga_cnv_cnt_to_v(int cnts, float adc_max_v,
  * @param[in] probe_att      Probe attenuation
  * @retval    float          Maximum voltage, expressed in [V]
  */
+/*  */
 float osc_fpga_calc_adc_max_v(uint32_t fe_gain_fs, int probe_att)
 {
     float max_adc_v;

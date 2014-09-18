@@ -1,15 +1,10 @@
-/**
+/** @file worker.h
+ *
  * $Id: worker.h 881 2013-12-16 05:37:34Z rp_jmenart $
  *
- * @brief Red Pitaya Oscilloscope worker.
- *
- * @Author Jure Menart <juremenart@gmail.com>
- *         
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
+ * @brief Red Pitaya Oscilloscope Worker (C Header).
+ * @author Jure Menart <juremenart@gmail.com>
+ * @copyright Red Pitaya  http://www.redpitaya.com
  */
 
 #ifndef __WORKER_H
@@ -99,10 +94,17 @@ int rp_osc_meas_min_max(rp_osc_meas_res_t *ch_meas, int sig_data);
 int rp_osc_meas_avg_amp(rp_osc_meas_res_t *ch_meas, int avg_len);
 /* helper function - calculates period and frequency */
 int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas, 
-                       int *in_cha_signal, int *in_chb_signal, int dec_factor);
-int meas_period(rp_osc_meas_res_t *meas, int *in_signal, int wr_ptr_trig, int dec_factor,
-                int *min, int *max);
+                       int *in_cha_signal, int *in_chb_signal, 
+                       int start_idx, int stop_idx, int dec_factor);
 /* helper function - convert CNT to V for meas. data (min, max, amp, avg) */
 int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal_dc_offs);
+
+/* Thread functions declared here */
+
+void* lcr_thread(void *conversation_pipes);
+
+float thread_function(float argv);
+
+void* test_thread(void* parameter);
 
 #endif /* __WORKER_H*/

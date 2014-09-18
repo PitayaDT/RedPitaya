@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>scope_test_2</title>
+  <title>scope_test_dev</title>
   <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
   <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
   <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
@@ -17,7 +17,7 @@
   
   // Settings which can be modified
    
-  var app_id = 'scope_test';
+  var app_id = 'scope_test';  
   var root_url = '';
   //var root_url = 'http://10.0.1.221';      // Test local
   //var root_url = 'http://192.168.53.133';  // Test remote and local
@@ -31,8 +31,7 @@
   var update_interval = 50;              // Update interval for PC, milliseconds
   var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds 
   var request_timeout = 3000;            // Milliseconds
-  var long_timeout = 0000;              // Milliseconds
-  var long_timeout = 40000;              // Milliseconds
+  var long_timeout = 20000;              // Milliseconds
   var meas_panel_dec = 5;                // Decimation for numerical measure panel to make it human readable
   var meas_panel_dec_mobdev = 1;         // Decimation for numerical measure panel for mobile devices
   var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
@@ -43,8 +42,11 @@
   var xmin = -1000000;
   var xmax = 1000000;  
 
+  /* LCR data type. 0 - phase, 1 - amplitude */
+  var data_type = 1;
+
   var time_range_max = [130, 1000, 8, 130, 1, 8];
-  var range_steps = [0.5, 1, 2, 5, 10, 20, 50, 100];
+  var range_steps = [0];
   
   var plot_options = {
     colors: ['#3276B1', '#D2322D', '#009900'],    // channel1, channel2, trigger line
@@ -74,20 +76,21 @@
   var autorun = 1;
   var datasets = [];
   var plot = null;
-  var measurement_start = 0;
-
   var params = {
     original: null,
-    local: null,
-    measurement_start: null
+    local: null
   };
+
+  //comment: -my vars
+  var first_time = 0;
   
   // Default parameters - posted after server side app is started 
   var def_params = {
     en_avg_at_dec: 0
-  };
+  }; 
     
   // On page loaded
+  
   $(function() {
     
     // Show different buttons on touch screens    
@@ -570,8 +573,7 @@
             
   });
   
-  function startApp(){
-      alert("Start App");
+  function startApp() {
     $.get(
       start_app_url
     )
@@ -586,7 +588,7 @@
         )
         .done(function(dresult) {
           app_started = true;
-          updateGraphData();
+          updateGraphData();      
         })
         .fail(function() {
           showModalError('Could not initialize the application with default parameters.', false, true);
@@ -708,7 +710,7 @@
             $('#btn_single').prop('disabled', true);
           }
           update_timer = setTimeout(function() {
-            //updateGraphData();
+            updateGraphData();
           }, update_interval);
         }
         else {
@@ -727,7 +729,7 @@
       else {
         last_get_failed = true;
         downloading = false;
-        //updateGraphData();  // One more try
+        updateGraphData();  // One more try
       }
     })
     .always(function() {
@@ -757,6 +759,7 @@
         use_long_timeout = false;
       }
     });
+    autoscaleY();
   }
   
   function initPlot(init_params) {
@@ -777,12 +780,25 @@
     var filtered_data = filterData(datasets, plot_holder.width());
   
     // Plot first creation and drawing
-    plot = $.plot(
-      plot_holder, 
-      filtered_data,
-      plot_options
-    );
-    
+    //comment
+    alert(first_time);
+    if(first_time == 0)
+    {
+      plot = $.plot(
+        plot_holder, 
+        [],
+        plot_options
+      );
+      first_time = 1;
+    }
+    else
+    {
+      plot = $.plot(
+        plot_holder, 
+        filtered_data,
+        plot_options
+      );
+    }  
     // Selection
     plot_holder.on('plotselected', function(event, ranges) {
     
@@ -963,6 +979,7 @@
     
     flag_table=0;
   }
+  showMeasure();
   }
   
   function isParamChanged() {
@@ -1034,7 +1051,7 @@
         updateTriggerSlider();
         
         if(refresh_data && !downloading) {
-          //updateGraphData();
+          updateGraphData();
         } 
       }
       else if(dresult.status == 'ERROR') {
@@ -1084,8 +1101,6 @@
   // Use only data for selected channels and do downsamling (data decimation), which is required for 
   // better performance. On the canvas cannot be shown too much graph points. 
   function filterData(dsets, points) {
-      alert("dsets");
-
     var filtered = [];
     var num_of_channels = 2;
 
@@ -1101,7 +1116,8 @@
       if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
         var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
         var k = 0;
-        for(var j=0; j<dsets[i].data.length; j++) {
+        //comment for(var j=0; j<dsets[i].data.length; j++) {
+        for(var j=0; j < 10; j++) {
           if(k > 0 && ++k < step) {
             continue;
           }
@@ -1218,11 +1234,12 @@
             yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
           })
         );
-        updateTriggerSlider();
+        updateTriggerSlider();        
       }
     }
+    //setVisibleChannels('#btn_ch2');
   }
-
+  
   function setVisibleChannels(btn) {
     var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
     var btn = $(btn);
@@ -1278,8 +1295,9 @@
       return;
     }
     
-    $('#btn_ch1, #btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');
-    
+    //comment $('#btn_ch1, #btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+    $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+
     var ymax = params.original.gui_reset_y_range / 2;
     var ymin = ymax * -1;
     
@@ -1297,8 +1315,8 @@
     plot.setupGrid();
     plot.draw();
     
-    params.local.xmin = xmin;
-    params.local.xmax = xmax;
+    params.local.xmin = datasets[0][1];
+    params.local.xmax = datasets[datasets.length-1][1];
     
     sendParams(true, true);
   }
@@ -1821,7 +1839,7 @@
  
  
  var flag_table = 1;
- var flag_graph = 1;
+ var flag_graph = 0;
  
  function change_graph()
  {
@@ -1834,51 +1852,102 @@
  }
  
 
-/* $(document).ready(function(e) {
-  $(".logo").click(function(e) { updateGraphData(); });
- });*/
+ $(document).ready(function(e) {
+  $(".logo").click(function(e) { updateGraphData(); alert("dela"); });
+ });
+ 
+ function selectAmpPhase(toggle_id) {
+    $('#toggle .btn').removeClass('btn-primary').addClass('btn-default');
+    $(this).toggleClass('btn-default btn-primary');
 
- function measure(){
-     measurement_start=1;
-     updateGraphData();
+    if(toggle_id == 'toggle_amp') {
 
-  /*    var valuesss = prompt("Vnesi cifre","recimo 100 10 120 11 130 12");
-      var splitValue = valuesss.split(" ");
-      alert(splitValue);
-      var valuesX = new Array();
-      var valuesY = new Array();
-      var indexX=0;
-      var indexY=0;
-      for(var i=0; i<splitValue.length; i+=2){
-          valuesX[indexX] = splitValue[i];
-          indexX++;
-      }
-      for(var i=1; i<splitValue.length; i+=2 ){
-        valuesY[indexY] = splitValue[i];
-        indexY++;
-      }
+      data_type = 1;
+      alert(data_type);
+    }else{
+      data_type = 0;
+    }
+    
+  }
+ 
+ function startMeasure(clicked_measure){
+    if(clicked_measure == 'btn_start_frequency_sweep'){
+      //TODO: Add parameter check!
+      
+      params.local.gen_amp = parseLocalFloat(document.getElementById('gen_amp').value);
+      params.local.gen_avg = parseLocalFloat(document.getElementById('gen_avg').value);
+      params.local.gen_DC_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
+      params.local.gen_R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
+      params.local.lcr_steps = parseLocalFloat(document.getElementById('gen_fs_step').value);
+      params.local.start_freq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
+      params.local.end_freq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
+      params.local.gen_fs_LoadRe = parseLocalFloat(document.getElementById('gen_fs_LoadRe').value);
+      params.local.gen_fs_LoadIm = parseLocalFloat(document.getElementById('gen_fs_LoadIm').value);
 
-      alert("Vrednisti X " + valuesX +  "Vrednsoti Y " + valuesY);
-      valuesss;
 
-       var options = plot.getOptions();
-          plot = $.plot(
-                  plot.getPlaceholder(),
-                  filterData(valuesss, plot.width()),
-                  $.extend(true, plot_options, {
-                      xaxis: { min: options.xaxes[0].min, max: options.xaxes[0].max },
-                      yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
-                  })
-          );
-          updateTriggerSlider();
+      /* Pulling data from dropdown list for Scale type */
+      params.local.lcr_scale_type = parseLocalFloat(document.getElementById('apply_gen_fs_scale').value);
 
-  //1. pošlji parametre na funkcijo
-  //2. sprejmi podatke
-  //3. preveri konsistentnost
-  //4. v loopu jih zriši
-*/
+      /* Pulling data from dropdown list for calibration type */
+      params.local.lcr_calibration = parseLocalFloat(document.getElementById('apply_gen_fs_OSCalib').value);
+      params.local.start_measure = 1;
+      
+      
+      
+    }else if(clicked_measure == 'btn_start_measurment_sweep'){
+      //TODO: Add parameter check!
+      
+      params.local.gen_amp = parseLocalFloat(document.getElementById('gen_amp').value);
+      params.local.gen_avg = parseLocalFloat(document.getElementById('gen_avg').value);
+      params.local.gen_DC_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
+      params.local.gen_R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
+      params.local.lcr_steps = parseLocalFloat(document.getElementById('gen_ms_step').value);
+      params.local.start_freq = parseLocalFloat(document.getElementById('gen_ms_freq').value);
+      params.local.gen_fs_LoadRe = parseLocalFloat(document.getElementById('gen_ms_LoadRe').value);
+      params.local.gen_fs_LoadIm = parseLocalFloat(document.getElementById('gen_ms_LoadIm').value);
+
+
+      /* Pulling data from dropdown list for Scale type */
+      params.local.lcr_scale_type = parseLocalFloat(document.getElementById('apply_gen_ms_scale').value);
+
+      /* Pulling data from dropdown list for calibration type */
+      params.local.lcr_calibration = parseLocalFloat(document.getElementById('apply_gen_ms_OSCalib').value);
+      params.local.start_measure = 2;
+      
+    }
+    sendParams();
+ }
+
+ function showMeasure(){
+  var y_axis = document.getElementById('apply_Yaxis').value;
+
+  if(y_axis == 0){
+    params.local.plot_y_scale_data = 0;
+  }else if(y_axis == 8){
+    params.local.plot_y_scale_data = 1;
   }
 
+  /* TODO: Switch Axis
+  switch(y_axis){
+    case 0:
+      params.local.plot_y_scale_data = 0;
+      break;
+    case 8:
+      params.local.plot_y_scale_data = 1;
+      break;
+  }
+  */
+  //alert(params.local.plot_y_scale_data);
+  
+  //TODO:Getter, setter for variable change params.local.fla_gutton as var 2;
+
+
+sendParams();
+
+  
+}
+
+  
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
@@ -1909,17 +1978,23 @@
           <button id="btn_pan" class="btn btn-default" onclick="selectTool.call(this, 'pan')" style="display: none">
             <span class="glyphicon glyphicon-move"></span>
           </button>
-          <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
-            <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
-          </button>
-        </div>
-        <button id="btn_measure" class="btn btn-primary btn-lg" data-autozoom="false" onclick="measure()">
-            <span class="glyphicon glyphicon-refresh"></span> Measure
-        </button>
 
-          <div hidden>
+          <!-- Div for selecting type of data plot -->
+          
+        </div>
+
+        <div hidden class="btn-group" data-toggle="buttons">
+          <!-- Primary data display is going to be amplitude--> 
+            
+          
+          </div>
+
+        
+
+
+    <div hidden>
         <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
-        <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
+        <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="false" onclick="setVisibleChannels(this)">Channel 2</button>
         <button hidden id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
         <button hidden id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
       </div>
@@ -1962,7 +2037,7 @@
                 <div class="form-group">
                   <label for="gen_amp" class="col-xs-4 control-label">Amplitude:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="1" id="gen_amp">
+                    <input type="number" autocomplete="off" class="form-control" value="1" id="gen_amp">
                     <span style="display: none;" class="input-group-btn" id="apply_gen_amp">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
@@ -1972,7 +2047,7 @@
                 <div class="form-group">
                   <label for="gen_avg" class="col-xs-4 control-label">Averaging:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="1" id="gen_avg">
+                    <input type="number" autocomplete="off" class="form-control" value="1" id="gen_avg">
                     <span style="display: none;" class="input-group-btn" id="apply_gen_avg">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
@@ -1981,7 +2056,7 @@
                 <div class="form-group">
                   <label for="gen_DC_bias" class="col-xs-4 control-label">DC Bias:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_DC_bias">
+                    <input type="number" autocomplete="off" class="form-control" value="0" id="gen_DC_bias">
                     <span style="display: none;" class="input-group-btn" id="apply_gen_DC_bias">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
@@ -1991,7 +2066,7 @@
                 <div class="form-group">
                   <label for="gen_R_shunt" class="col-xs-4 control-label">R_shunt:</label>
                   <div class="col-xs-5">
-                    <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_R_shunt">
+                    <input type="number" autocomplete="off" class="form-control" value="1000" id="gen_R_shunt">
                     <span id="apply_gen_R_shunt" class="input-group-btn" style="display: none;">
                       <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
@@ -2017,7 +2092,7 @@
           <div class="panel-heading">
             <h4 class="panel-title">
             <a data-toggle="collapse" href="#meas_sweep">
-              Measurement sweep
+              <b>Measurement sweep</b>
             </a>
           </h4>
           </div>
@@ -2032,8 +2107,8 @@
                     </div>
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
-          <div class="form-group">
-                    <label for="gen_ms_step" class="col-xs-4 control-label">Step:</label>
+                  <div class="form-group">
+                    <label for="gen_ms_step" class="col-xs-4 control-label">Count:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="1" id="gen_ms_step">
                       <span id="apply_gen_ms_step" class="input-group-btn" style="display: none;">
@@ -2041,6 +2116,17 @@
                       </span>
                     </div>
                   </div>
+
+          <div class="form-group">
+            <label for="gen_fs_scale" class="col-xs-4 control-label">Scale:</label>
+          <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_ms_scale">
+                        <option value="0">Lin</option>
+                        <option value="1">Log</option>
+                      </select>
+                  </div>
+          </div>
+
           <div class="form-group">
             <label for="gen_ms_wait" class="col-xs-4 control-label">Wait:</label>
           <div class="col-xs-4 col-sm-5">
@@ -2051,28 +2137,21 @@
                   </div>
           </div>
           <div class="form-group">
-            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
-          <div class="col-xs-4 col-sm-5">
-                      <select class="form-control" id="apply_gen_fs_OSCalib">
-                        <option value="0">Yes</option>
-                        <option value="1">No</option>
+            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Calibration:</label>
+                   <div class="col-xs-4 col-sm-5">
+                      <select class="form-control" id="apply_gen_ms_OSCalib">
+                        <option value="0">Open</option>
+                        <option value="1">Short</option>
+                        <option value="2">Load</option>
+                        <option value="3">None</option>
                       </select>
                     </div>
           </div>
           <div class="form-group">
-            <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
-          <div class="col-xs-4 col-sm-5">
-                      <select class="form-control" id="apply_gen_fs_LoadCalib">
-                        <option value="0">Yes</option>
-                        <option value="1">No</option>
-                      </select>
-                    </div>
-          </div>
-          <div class="form-group">
-                    <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
+                    <label for="gen_fs_LoadReLabel" class="col-xs-4 control-label"> Load Re:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
-                      <span id="apply_gen_fs_LoadRe" class="input-group-btn" style="display: none;">
+                      <input type="number" autocomplete="off" class="form-control" value="0" id="gen_ms_LoadRe">
+                      <span id="apply_gen_fs_LoadReLabel" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
@@ -2081,7 +2160,7 @@
           <div class="form-group">
                     <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
+                      <input type="number" autocomplete="off" class="form-control" value="0" id="gen_ms_LoadIm">
                       <span id="apply_gen_fs_LoadIm" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2089,22 +2168,22 @@
                     <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
           <div>
-          <button id="btn_start_MS" class="btn btn-primary btn-lg" data-checked="true" onclick="">Start</button>
+          <button id="btn_start_measurment_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
           </div>
         </div>
         
         <div class="panel-heading">
             <h4 class="panel-title">
           <a data-toggle="collapse" href="#freq_sweep">
-            Frequency sweep
+            <b>Frequency sweep</b>
             </a>
           </h4>
           </div>
         <div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
-                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start f.:</label>
+                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fs_Sfreq">
+                      <input type="number" autocomplete="off" class="form-control" value="200" id="gen_fs_Sfreq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2112,9 +2191,9 @@
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
           <div class="form-group">
-                    <label for="gen_fs_Efreq" class="col-xs-4 control-label">Stop f.:</label>
+                    <label for="gen_fs_Efreq" class="col-xs-4 control-label">End frequency:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fs_Efreq">
+                      <input type="number" autocomplete="off" class="form-control" value="10000" id="gen_fs_Efreq">
                       <span id="apply_gen_fs_Efreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2124,7 +2203,7 @@
           <div class="form-group">
                     <label for="gen_fs_step" class="col-xs-4 control-label">Step:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="1" id="gen_fs_step">
+                      <input type="number" autocomplete="off" class="form-control" value="10" id="gen_fs_step">
                       <span id="apply_gen_fs_step" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2140,45 +2219,39 @@
                   </div>
           </div>
           <div class="form-group">
-            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
+            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Calibration:</label>
           <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_OSCalib">
-                        <option value="0">Yes</option>
-                        <option value="1">No</option>
+                        <option value="0">Open</option>
+                        <option value="1">Short</option>
+                        <option value="2">Load</option>
+                        <option value="3">None</option>
                       </select>
                     </div>
           </div>
+          
           <div class="form-group">
-            <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
-          <div class="col-xs-4 col-sm-5">
-                      <select class="form-control" id="apply_gen_fs_LoadCalib">
-                        <option value="0">Yes</option>
-                        <option value="1">No</option>
-                      </select>
-                    </div>
-          </div>
-          <div class="form-group">
-                    <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
+                    <label for="gen_fs_LoadReLabelFS" class="col-xs-4 control-label"> Load Re:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
-                      <span id="apply_gen_fs_LoadRe" class="input-group-btn" style="display: none;">
+                      <input type="text" autocomplete="off" class="form-control" value="0" id="gen_fs_LoadRe">
+                      <span id="apply_gen_fs_LoadReSpan" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                     <div id="fs_LoadRe_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
           <div class="form-group">
-                    <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
+                    <label for="gen_fs_LoadImLabel" class="col-xs-4 control-label"> Load Im:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
-                      <span id="apply_gen_fs_LoadIm" class="input-group-btn" style="display: none;">
+                      <input type="text" autocomplete="off" class="form-control" value="0" id="gen_fs_LoadIm">
+                      <span id="apply_gen_fs_LoadImSpan" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                     <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
           <div>
-          <button id="btn_start_MS" class="btn btn-primary btn-lg" data-checked="true" onclick="">Start</button>
+          <button id="btn_start_frequency_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
           </div>
         </div>
         
@@ -2316,42 +2389,45 @@
           <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
             <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Xaxis">
-                      <option value="0">Rs</option>
+                      <option value="0">Frequency</option>
+                      <option value="11">Rs</option>
                       <option value="1">Ls</option>
-            <option value="2">Cp</option>
-            <option value="3">Cs</option>
-            <option value="4">Rp</option>
-            <option value="5">Q</option>
-            <option value="6">D</option>
-            <option value="7">Y</option>
-            <option value="8">Z</option>
-            <option value="9">|Z|</option>
-            <option value="10">|Y|</option>
+                      <option value="2">Cp</option>
+                      <option value="3">Cs</option>
+                      <option value="4">Rp</option>
+                      <option value="5">Q</option>
+                      <option value="6">D</option>
+                      <option value="7">Y</option>
+                      <option value="8">Z</option>
+                      <option value="9">|Z|</option>
+                      <option value="10">|Y|</option>
                     </select>
-                  </div>
+            </div>
         </div>
         <div class="form-group">
           <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
             <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Yaxis">
-                      <option value="0">Rs</option>
+                      <option value="8">Amplitude</option>
+                      <option value="11">Rs</option>
                       <option value="1">Ls</option>
-            <option value="2">Cp</option>
-            <option value="3">Cs</option>
-            <option value="4">Rp</option>
-            <option value="5">Q</option>
-            <option value="6">D</option>
-            <option value="7">Y</option>
-            <option value="8">Z</option>
-            <option value="9">|Z|</option>
-            <option value="10">|Y|</option>
+                      <option value="2">Cp</option>
+                      <option value="3">Cs</option>
+                      <option value="4">Rp</option>
+                      <option value="5">Q</option>
+                      <option value="6">D</option>
+                      <option value="7">Y</option>
+                      <option value="9">|Z|</option>
+                      <option value="10">|Y|</option>
+                      <option value="0">Phase</option>
                     </select>
                   </div>
         </div>
-                <div>
-          <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
-          <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
+
+        <div>
+          <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="false" onclick="change_graph()">Show plot</button>
         </div>
+
               </form>
             </div>
           </div>
@@ -2493,6 +2569,9 @@
         </div>
       </div>
     </div>
-  </div>  
+  </div> 
+
+
+
 </body>
 </html>
