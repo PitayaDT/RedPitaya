@@ -1,15 +1,10 @@
-/**
+/** @file main.h
+ *
  * $Id: main.h 881 2013-12-16 05:37:34Z rp_jmenart $
  *
- * @brief Red Pitaya Oscilloscope main module.
- *
- * @Author Jure Menart <juremenart@gmail.com>
- *         
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
+ * @brief Red Pitaya Main module (C Header).
+ * @author Jure Menart <juremenart@gmail.com>
+ * @copyright Red Pitaya  http://www.redpitaya.com
  */
 
 #ifndef __MAIN_H
@@ -45,7 +40,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        84
+#define PARAMS_NUM        62
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -60,7 +55,7 @@ typedef struct rp_osc_meas_res_s {
 #define AUTO_FLAG_PARAM   11
 #define MIN_Y_PARAM       12
 #define MAX_Y_PARAM       13
-#define FORCEX_FLAG_PARAM 14
+#define FORCEX_FLAG_PARAM  14
 #define MEAS_MIN_CH1      15
 #define MEAS_MAX_CH1      16
 #define MEAS_AMP_CH1      17
@@ -78,80 +73,46 @@ typedef struct rp_osc_meas_res_s {
 #define PRB_ATT_CH2       29
 #define GAIN_CH2          30
 #define GUI_RST_Y_RANGE   31
-#define GEN_DC_OFFS_1     32
-#define GEN_DC_OFFS_2     33
-#define GUI_XMIN          34
-#define GUI_XMAX          35
-#define MIN_Y_NORM        36
-#define MAX_Y_NORM        37
-#define GEN_DC_NORM_1     38
-#define GEN_DC_NORM_2     39
-#define SCALE_CH1         40
-#define SCALE_CH2         41
+#define PREPARE_WAVE      32
+#define GEN_DC_OFFS_1     33
+#define GEN_DC_OFFS_2     34
+#define START_MEASURE     35
+#define GEN_AMP           36
+#define GEN_AVG           37
+#define GEN_DC_BIAS       38
+#define GEN_R_SHUNT       39
+#define LCR_STEPS         40
+#define START_FREQ        41
+#define END_FREQ          42
+#define PLOT_Y_SCALE_DATA 43
+#define LCR_SCALE_TYPE    44
+#define GEN_FS_LOADRE     45
+#define GEN_FS_LOADIM     46
+#define LCR_CALIBRATION   47
 /* AWG parameters */
-#define GEN_TRIG_MODE_CH1 42
-#define GEN_SIG_TYPE_CH1  43
-#define GEN_ENABLE_CH1    44
-#define GEN_SINGLE_CH1    45
-#define GEN_SIG_AMP_CH1   46
-#define GEN_SIG_FREQ_CH1  47
-#define GEN_SIG_DCOFF_CH1 48
-#define GEN_TRIG_MODE_CH2 49
-#define GEN_SIG_TYPE_CH2  50
-#define GEN_ENABLE_CH2    51
-#define GEN_SINGLE_CH2    52
-#define GEN_SIG_AMP_CH2   53
-#define GEN_SIG_FREQ_CH2  54
-#define GEN_SIG_DCOFF_CH2 55
-#define GEN_AWG_REFRESH   56
-/* PID parameters */
-#define PID_11_ENABLE     57
-#define PID_11_RESET      58
-#define PID_11_SP         59
-#define PID_11_KP         60
-#define PID_11_KI         61
-#define PID_11_KD         62
-#define PID_12_ENABLE     63
-#define PID_12_RESET      64
-#define PID_12_SP         65
-#define PID_12_KP         66
-#define PID_12_KI         67
-#define PID_12_KD         68
-#define PID_21_ENABLE     69
-#define PID_21_RESET      70
-#define PID_21_SP         71
-#define PID_21_KP         72
-#define PID_21_KI         73
-#define PID_21_KD         74
-#define PID_22_ENABLE     75
-#define PID_22_RESET      76
-#define PID_22_SP         77
-#define PID_22_KP         78
-#define PID_22_KI         79
-#define PID_22_KD         80
-
-/**
-New definitions
-P.S Don't forget to change the PARAMS_NUM !!!!!
-*/
-
-#define B_CALIB           81
-#define B_MEASUR          82
-#define B_WAIT            83
+#define GEN_TRIG_MODE_CH1 48
+#define GEN_SIG_TYPE_CH1  49
+#define GEN_ENABLE_CH1    50
+#define GEN_SINGLE_CH1    51
+#define GEN_SIG_AMP_CH1   52
+#define GEN_SIG_FREQ_CH1  53
+#define GEN_SIG_DCOFF_CH1 54
+#define GEN_TRIG_MODE_CH2 55
+#define GEN_SIG_TYPE_CH2  56
+#define GEN_ENABLE_CH2    57
+#define GEN_SINGLE_CH2    58
+#define GEN_SIG_AMP_CH2   59
+#define GEN_SIG_FREQ_CH2  60
+#define GEN_SIG_DCOFF_CH2 62
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
- * trigger update only on needed part - either Oscilloscope, AWG or PID */
-#define PARAMS_AWG_PARAMS 42
-
-/* Defines from which parameters on are PID parameters (used in set_param() to
- * trigger update only on needed part - either Oscilloscope, AWG or PID */
-#define PARAMS_PID_PARAMS 57
-#define PARAMS_PER_PID     6
+ * trigger update only on needed part - either Oscilloscope or AWG */
+#define PARAMS_AWG_PARAMS 48
 
 /* Output signals */
-#define SIGNAL_LENGTH (1024) /* Must be 2^n! */
 #define SIGNALS_NUM   3
 
+#define SIGNAL_LENGTH 100
 
 /* module entry points */
 int rp_app_init(void);
@@ -175,9 +136,6 @@ int rp_clean_params(rp_app_params_t *params);
 * parameters are updated it also changed the worker state machine.
  */
 int rp_update_main_params(rp_app_params_t *params);
-void get_scales(rp_app_params_t *p, float *scale1, float *scale2, float *maxv);
-void transform_to_iface_units(rp_app_params_t *p);
-void transform_from_iface_units(rp_app_params_t *p);
 
 /* sets the measurement data to output parameters structure - these parameters
  * are read-only for the client and there is no need to update them internally
@@ -187,5 +145,20 @@ int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas);
 
 /* Waveform generator frequency limiter. */
 float rp_gen_limit_freq(float freq, float gen_type);
+
+/* Function for setting the time range parameter from the lcr function */
+
+void rp_set_time_range(float f);
+
+/* For testing purposes only. */
+void rp_set_mes_data(float x);
+
+float rp_get_params_lcr(int pos);
+
+void rp_set_params_lcr(int pos, float val);
+
+
+void rp_set_trig_mode();
+
 
 #endif /*  __MAIN_H */

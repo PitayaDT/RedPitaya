@@ -1,16 +1,10 @@
-/**
+/** @file generate.h
+ *
  * $Id: generate.h 882 2013-12-16 12:46:01Z crt.valentincic $
  *
- * @brief Red Pitaya simple signal/function generator with pre-defined
- *        signal types.
- *
- * @Author Jure Menart <juremenart@gmail.com>
- *         
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
+ * @brief Red Pitaya simple signal/function generator with pre-defined signal types (C Header).
+ * @author Jure Menart <juremenart@gmail.com>
+ * @copyright Red Pitaya  http://www.redpitaya.com
  */
 
 #ifndef __GENERATE_H
@@ -44,5 +38,12 @@ int generate_init(rp_calib_params_t *calib_params);
 int generate_exit(void);
 
 int generate_update(rp_app_params_t *params);
+
+void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
+                       float max_dac_v, float user_dc_offs, awg_signal_t type, 
+                       int32_t *data, awg_param_t *awg);
+
+void write_data_fpga(uint32_t ch, int mode, int trigger, const int32_t *data,
+                     const awg_param_t *awg, int wrap);
 
 #endif // __GENERATE_H

@@ -1,15 +1,10 @@
-/**
+/** @file main.c
+ *
  * $Id: main.c 881 2013-12-16 05:37:34Z rp_jmenart $
  *
- * @brief Red Pitaya Oscilloscope main module.
- *
- * @Author Jure Menart <juremenart@gmail.com>
- *         
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
+ * @brief Red Pitaya Main module.
+ * @author Jure Menart <juremenart@gmail.com>
+ * @copyright Red Pitaya  http://www.redpitaya.com
  */
 
 #include <stdio.h>
@@ -27,7 +22,7 @@
 #include "fpga.h"
 #include "calib.h"
 #include "generate.h"
-#include "pid.h"
+
 
 /* Describe app. parameters with some info/limitations */
 pthread_mutex_t rp_main_params_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -54,8 +49,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "trig_edge", 0, 1, 0,         0,         1 },
     { /* trig_delay     */
         "trig_delay", 0, 1, 1, -10000000, +10000000 },
-    { /* trig_level : Trigger level, expressed in normalized 1V  */
-        "trig_level", 0, 1, 0,     -2,     +2 },
+    { /* trig_level     */
+        "trig_level", 0, 1, 0,     -1000,     +1000 },
     { /* single_button:
        *    0 - ignore 
        *    1 - trigger */
@@ -95,7 +90,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * Client checks this flag, when set the server's xmin:xmax define the visualization range 
        *    0 - normal operation
        *    1 - Server forces xmin, xmax  */
-        "forcex_flag", 0, 0, 0, 0, 1 },	
+        "forcex_flag", 0, 0, 0, 0, 1 }, 
       /* Measurement parameters for both channels. All are read-only and they
        * are calculated on FPGA buffer (non decimated in SW):
        * min, max [V] - minimum and maximum value in the buffer (non-decimated)
@@ -137,32 +132,79 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * client.
        */
         "gui_reset_y_range", 28, 0, 1, 0, 2000 },
+    { /* prepare_wave - GUI notification for CPU to download waveform:
+       *    0 - normal operation (no download)
+       *    1 - button for download presses - this flag is self-clearing when
+       *        download is finished */
+        "prepare_wave", 0, 0, 0, 0, 1 },
     { /* gen_DC_offs_1 - DC offset for channel 1 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_1", 0, 1, 0, -100, 100 },
     { /* gen_DC_offs_2 - DC offset for channel 2 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
-    { /* gui_xmin - Xmin as specified by GUI - not rounded to sampling engine quanta. */
-        "gui_xmin",      0, 0, 1, -10000000, +10000000 },
-    { /* gui_xmax - Xmax as specified by GUI - not rounded to sampling engine quanta. */
-        "gui_xmax",    131, 0, 1, -10000000, +10000000 },
-    { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
-        "min_y_norm", 0, 0, 0, -1000, +1000 },
-    { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
-        "max_y_norm", 0, 0, 0, -1000, +1000 },
-    { /* gen_DC_norm_1 - DC offset for channel 1 expressed in normalized 1V */
-        "gen_DC_norm_1", 0, 1, 0, -100, 100 },
-    { /* gen_DC_norm_2 - DC offset for channel 2 expressed in normalized 1V */
-        "gen_DC_norm_2", 0, 1, 0, -100, 100 },
-    { /* scale_ch1 - Jumper & probe attenuation dependent Y scaling factor for Channel 1 */
-        "scale_ch1", 0, 0, 1, -1000, 1000 },
-    { /* scale_ch2 - Jumper & probe attenuation dependent Y scaling factor for Channel 2 */
-        "scale_ch2", 0, 0, 1, -1000, 1000 },
-
-    /********************************************************/
+    { /* start_measure - General flag used for sending params from the RedPitaya browser.
+       *   -1 - Application not loaded yet
+       *    0 - negative
+       *    1 - Frequency Sweep
+       *    2 - Measurment sweep 
+       *    3 - Other ( Change the max value for more states )
+       *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
+       *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
+       *    code in index.html as well as from the C controller code. */
+        "start_measure", -1, 1, 0, -1, 3 },
+    { /* LCR amplitude. User defined.
+       *    Min value - 0
+       *    Max value - 2 */
+        "gen_amp", 0, 1, 0, 0, 2 },
+    { /* Averaging parameter.
+       *    Min value - 0
+       *    Max value - 10 */
+        "gen_avg", 0, 1, 0, 0, 10 },
+    { /* DC bias parameter.
+       *    Min value - (-2)
+       *    Max value -   2 */
+        "gen_DC_bias", 0, 1, 0, -2, 2 },
+    { /* DC bias parameter.
+       *    Min value - (-2)
+       *    Max value -   2  */
+       "gen_R_shunt", 0, 1, 0, 0, 50000 },
+    { /* LCR steps declared by user
+       * Minimum value - 1
+       * Maximum value - 1000  */
+      "lcr_steps", 0, 1, 0, 0, 1000},
+    { /* Start frequency for frequency sweep.
+       *    Min value - 200
+       *    Max value - 1000000    */
+       "start_freq", 200, 1, 0, 0, 1000000 },
+    { /* End frequency for frequency sweep.
+       * Min value - 200
+       * Max value - 1000000 */
+       "end_freq", 200, 1, 0, 0, 1000000 },
+    { /* Plots different data depending on user choice
+       * 0 - Plots amplitude
+       * 1 - Plots phase
+       * 5 - TODO: Adding multiple data acquisition. */
+      "plot_y_scale_data", 0, 1, 0, 0, 5 },
+    { /* Lcr scale type. Defined by user.
+       * 0 - Linear scale
+       * 1 - Logarithmic scale */
+      "lcr_scale_type", 0 , 1, 0, 0, 1 },
+    { /* Lcr LoadRE
+       * */
+      "gen_fs_LoadRe", 0, 1, 0, 0, 1 },
+    
+    { /* Lcr LoadIm
+       * */
+      "gen_fs_LoadIm", 0, 1, 0, 0, 1 },
+    { /* Calibration type. Defined by user in browser.
+       * 0 - Open calibration
+       * 1 - Short alibration
+       * 2 - Load calibration
+       * 3 - None */
+       "lcr_calibration", 0, 1, 0, 0, 3 },
+    
     /* Arbitrary Waveform Generator parameters from here on */
-    /********************************************************/
 
     { /* gen_trig_mod_ch1 - Selects the trigger mode for channel 1:
        *    0 - continuous
@@ -214,112 +256,24 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "gen_sig_freq_ch2", 1000, 1, 0, 0.2, 50e6 },
     { /* gen_sig_dcoff_ch2 - DC offset applied to the signal in [V] */
         "gen_sig_dcoff_ch2", 0, 1, 0, -1, 1 },
-    { /* gen_awg_refresh - Refresh AWG data from (uploaded) file.
-       *     0 - Do not refresh
-       *     1 - Refresh Channel 1
-       *     2 - Refresh Channel 2
-       */
-        "gen_awg_refresh",   0, 0, 0, 0, 2 },
-
-    /******************************************/
-    /* PID Controller parameters from here on */
-    /******************************************/
-
-    { /* pid_NN_enable - Enables/closes or disables/open PID NN loop:
-       *    0 - PID disabled (open loop)
-       *    1 - PID enabled (closed loop)    */
-        "pid_11_enable", 0, 1, 0, 0, 1 },
-    { /* pid_NN_rst - Reset PID NN integrator:
-        *    0 - Do not reset integrator
-        *    1 - Reset integrator            */
-        "pid_11_rst", 0, 1, 0, 0, 1 },
-    { /* pid_NN_sp - PID NN set-point in [ADC] counts. */
-        "pid_11_sp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kp - PID NN proportional gain Kp in [ADC] counts. */
-        "pid_11_kp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_ki - PID NN integral gain     Ki in [ADC] counts. */
-        "pid_11_ki",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kd - PID NN derivative gain   Kd in [ADC] counts. */
-        "pid_11_kd",  0, 1, 0, -8192, 8191 },
-
-    { /* pid_NN_enable - Enables/closes or disables/open PID NN loop:
-       *    0 - PID disabled (open loop)
-       *    1 - PID enabled (closed loop)    */
-        "pid_12_enable", 0, 1, 0, 0, 1 },
-    { /* pid_NN_rst - Reset PID NN integrator:
-        *    0 - Do not reset integrator
-        *    1 - Reset integrator            */
-        "pid_12_rst", 0, 1, 0, 0, 1 },
-    { /* pid_NN_sp - PID NN set-point in [ADC] counts. */
-        "pid_12_sp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kp - PID NN proportional gain Kp in [ADC] counts. */
-        "pid_12_kp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_ki - PID NN integral gain     Ki in [ADC] counts. */
-        "pid_12_ki",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kd - PID NN derivative gain   Kd in [ADC] counts. */
-        "pid_12_kd",  0, 1, 0, -8192, 8191 },
-
-    { /* pid_NN_enable - Enables/closes or disables/open PID NN loop:
-       *    0 - PID disabled (open loop)
-       *    1 - PID enabled (closed loop)    */
-        "pid_21_enable", 0, 1, 0, 0, 1 },
-    { /* pid_NN_rst - Reset PID NN integrator:
-        *    0 - Do not reset integrator
-        *    1 - Reset integrator            */
-        "pid_21_rst", 0, 1, 0, 0, 1 },
-    { /* pid_NN_sp - PID NN set-point in [ADC] counts. */
-        "pid_21_sp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kp - PID NN proportional gain Kp in [ADC] counts. */
-        "pid_21_kp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_ki - PID NN integral gain     Ki in [ADC] counts. */
-        "pid_21_ki",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kd - PID NN derivative gain   Kd in [ADC] counts. */
-        "pid_21_kd",  0, 1, 0, -8192, 8191 },
-
-    { /* pid_NN_enable - Enables/closes or disables/open PID NN loop:
-       *    0 - PID disabled (open loop)
-       *    1 - PID enabled (closed loop)    */
-        "pid_22_enable", 0, 1, 0, 0, 1 },
-    { /* pid_NN_rst - Reset PID NN integrator:
-        *    0 - Do not reset integrator
-        *    1 - Reset integrator            */
-        "pid_22_rst", 0, 1, 0, 0, 1 },
-    { /* pid_NN_sp - PID NN set-point in [ADC] counts. */
-        "pid_22_sp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kp - PID NN proportional gain Kp in [ADC] counts. */
-        "pid_22_kp",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_ki - PID NN integral gain     Ki in [ADC] counts. */
-        "pid_22_ki",  0, 1, 0, -8192, 8191 },
-    { /* pid_NN_kd - PID NN derivative gain   Kd in [ADC] counts. */
-        "pid_22_kd",  0, 1, 0, -8192, 8191 },
-
-
-     /**
-    New parameters
-    don't foget to change the main.h !!!
-    */
-
-    { "b_calib", 0, 0, 0, 0, 1 },
-    { "b_measure", 0, 0, 0, 0, 1 },
-    { "b_wait", 0, 0, 0, 0, 1 },
-
-
+    
     { /* Must be last! */
         NULL, 0.0, -1, -1, 0.0, 0.0 }     
 };
 /* params initialized */
 static int params_init = 0;
 
-/* AUTO set algorithm in progress flag */
-int auto_in_progress = 0;
-
 rp_calib_params_t rp_main_calib_params;
+float rp_main_ch1_max_adc_v;
+float rp_main_ch2_max_adc_v;
 
-int forcex_state = 0;
-float forced_xmin = 0;
-float forced_xmax = 0;
-float forced_units = 0;
-float forced_delay = 0;
+int forcex_state=0;
+float forced_xmin=0;
+float forced_xmax=0;
+float forced_units=0;
+float forced_delay=0;
+
+
 
 
 const char *rp_app_desc(void)
@@ -329,7 +283,9 @@ const char *rp_app_desc(void)
 
 int rp_app_init(void)
 {
-    fprintf(stderr, "Loading scope (with gen+pid extensions) version %s-%s.\n", VERSION_STR, REVISION_STR);
+    
+    fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
+
 
     rp_default_calib_params(&rp_main_calib_params);
     if(rp_read_calib_params(&rp_main_calib_params) < 0) {
@@ -343,8 +299,24 @@ int rp_app_init(void)
     if(generate_init(&rp_main_calib_params) < 0) {
         return -1;
     }
-    if(pid_init() < 0) {
-        return -1;
+
+    if(rp_main_params[GAIN_CH1].value == 0) {
+        rp_main_ch1_max_adc_v = 
+            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_hi, 
+                                    rp_main_params[PRB_ATT_CH1].value);
+    } else {
+        rp_main_ch1_max_adc_v = 
+            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_lo, 
+                                    rp_main_params[PRB_ATT_CH1].value);
+    }
+    if(rp_main_params[GAIN_CH2].value == 0) {
+        rp_main_ch2_max_adc_v = 
+            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_hi, 
+                                    rp_main_params[PRB_ATT_CH2].value);
+    } else {
+        rp_main_ch2_max_adc_v = 
+            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_lo, 
+                                    rp_main_params[PRB_ATT_CH2].value);
     }
 
     rp_set_params(&rp_main_params[0], PARAMS_NUM);
@@ -355,11 +327,10 @@ int rp_app_init(void)
 
 int rp_app_exit(void)
 {
-    fprintf(stderr, "Unloading scope (with gen+pid extensions) version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Unloading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     rp_osc_worker_exit();
     generate_exit();
-    pid_exit();
 
     return 0;
 }
@@ -385,77 +356,71 @@ int time_range_to_time_unit(int range)
 }
 
 /* Find a suitable FPGA decimation factor and trigger delay,
- * based on xmin & xmax zoom conntrols
- */
+ * based on xmin & xmax zoom conntrols */
 int transform_acq_params(rp_app_params_t *p)
 {
-    TRACE("%s()\n", __FUNCTION__);
-
     int ret = 0;
     int i;
-
-    /* Skip the transform in case auto-set is in progress */
-    if ( (p[AUTO_FLAG_PARAM].value == 1) || (auto_in_progress == 1)) {
-        return ret;
-    }
+    
+    
+    
 
     double xmin = p[MIN_GUI_PARAM].value;
     double xmax = p[MAX_GUI_PARAM].value;
 
     float ratio;
-
-    int reset_zoom = 0;
-
+   
+    int reset_zoom=0;
+    
     int time_unit = p[TIME_UNIT_PARAM].value;
     float t_unit_factor = pow(10, 3*(2 - time_unit));
 
-    /* When exactly this pair is provided by client, Reset Zoom is requested. */
-    if ((xmax == 1.0e6) && (xmin == -1.0e6)) {
-        reset_zoom = 1;
+    
+    // When exactly this pair provided by client Reset Zoom is requested
+    if ((xmax==1.0e6) && (xmin==-1.0e6))
+      reset_zoom=1;
+    
+    TRACE("tu = %d, tf = %10.8f\n", time_unit, t_unit_factor);
+
+    // Retrieve Server ForceX state    
+    p[FORCEX_FLAG_PARAM].value  = (float) forcex_state;
+    
+    // Difference (expressed as ratio) between forced values and GUI state
+    if ((xmax-xmin) !=0)
+      ratio=fabs(forced_xmax-forced_xmin)/fabs(xmax-xmin);
+    else
+      ratio=0;
+    
+    if (ratio>1)   // Make it always between 0 and 1   (0: very different, 1 equal)
+      ratio=1/ratio;
+    
+    
+    if (ratio > 0.03)     // Stop forcing if factor 33 of difference or less  
+    {
+      p[FORCEX_FLAG_PARAM].value  = 0;
+      forcex_state=0;
     }
-
-    /* Server ForceX state */
-    p[FORCEX_FLAG_PARAM].value = (float) forcex_state;
-
-    /* Difference (expressed as ratio) between forced values and GUI state */
-    if ((xmax - xmin) != 0) {
-        ratio = fabs(forced_xmax - forced_xmin) / fabs(xmax - xmin);
-    } else {
-        ratio = 0.0;
-    }
-
-    /* Make it always between 0 and 1   (0: very different, 1 equal) */
-    if (ratio > 1) {
-        ratio = 1.0 / ratio;
-    }
-
-    /* Stop forcing if factor 33 of difference or less */
-    if (ratio > 0.03) {
-        p[FORCEX_FLAG_PARAM].value  = 0;
-        forcex_state = 0;
-    }
-
-    /* Contver GUI values to seconds */
+    
+    
+    // Contver GUI values to seconds
     xmin /= t_unit_factor;
     xmax /= t_unit_factor;
 
-    TRACE("TR: Xmin, Xmax: %10.8f, %10.8f\n", xmin, xmax);
+    TRACE("Xmin, Xmax: %10.8f, %10.8f\n", xmin, xmax);
 
-    int time_unit_gui = time_unit;
 
+    int time_unit_gui=time_unit;
+    
     int dec;
     double rdec;
 
-    /* Calculate the suitable FPGA decimation setting that optimally covers the GUI time frame */
-    if (p[TRIG_MODE_PARAM].value == 0) {
-        /* Autotriggering mode => acquisition starts at time t = 0 */
-        rdec = (xmax - 0) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
-    } else {
-        double rxmax = (xmax < 0) ? 0 : xmax;
-        rdec = (rxmax - xmin) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
-    }
-
-    /* Find optimal decimation setting */
+    // Calculate the suitable FPGA decimation setting that optimally covers the GUI time frame
+    
+    if (p[TRIG_MODE_PARAM].value==0)  // Autotriggering mode => acquisition starts at time t=0
+      rdec= (xmax - 0) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
+    else
+      rdec= (xmax - xmin) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
+    
     for (i = 0; i < 6; i++) {
         dec = osc_fpga_cnv_time_range_to_dec(i);
         if (dec >= rdec) {
@@ -464,160 +429,126 @@ int transform_acq_params(rp_app_params_t *p)
     }
     if (i > 5)
         i = 5;
+    
+    // Optimal decimation setting identified
+    
+    
+    // Apply decimation parameter (time range), but not when forcing GUI client or during reset zoom.
+    
+    if ((forcex_state==0) && (reset_zoom==0))  
+    p[TIME_RANGE_PARAM].value = i;
 
-    /* Apply decimation parameter (time range), but not when forcing GUI client
-     * or during reset zoom.
-     */
-    if ((forcex_state == 0) && (reset_zoom == 0)) {
-        p[TIME_RANGE_PARAM].value = i;
-    }
+    
+    TRACE("Dcimation: %6.2f -> %dx\n", rdec, dec);
+    TRACE("Time range: %d\n", i);
 
-    TRACE("TR: Dcimation: %6.2f -> %dx\n", rdec, dec);
-
+    TRACE("Reset zoom: %d\n", reset_zoom);
+    
+  
+    
+    
+    
     /* New time_unit & factor */
     time_unit = time_range_to_time_unit(p[TIME_RANGE_PARAM].value);
     t_unit_factor = pow(10, 3*(2 - time_unit));
 
-    /* Update time unit Min and Max, but not if GUI hasn't responded to "forceX" command. */
-    if (forcex_state == 0) {
-        p[MIN_GUI_PARAM].value = xmin * t_unit_factor;
-        p[MAX_GUI_PARAM].value = xmax * t_unit_factor;
-        p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
-        p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
-        p[TIME_UNIT_PARAM].value = time_unit;
-    } else {
-        p[MIN_GUI_PARAM].value = forced_xmin;
-        p[MAX_GUI_PARAM].value = forced_xmax;
-        p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
-        p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
-        p[TIME_UNIT_PARAM].value = forced_units;
+    
+  
+    if (forcex_state==0)   // Update time unit Min and Max, but not if GUI hasn't responded to "forceX" command.
+    { 
+     p[MIN_GUI_PARAM].value = xmin * t_unit_factor;
+     p[MAX_GUI_PARAM].value = xmax * t_unit_factor;
+     p[TIME_UNIT_PARAM].value = time_unit;
     }
+    else
+    {
+     p[MIN_GUI_PARAM].value = forced_xmin;
+     p[MAX_GUI_PARAM].value = forced_xmax;
+     p[TIME_UNIT_PARAM].value = forced_units;     
+    }
+    
+    
+    
+    
+    
+    // If time units changed by server: client MUST configure x axis (ForceX is set for this purpose by server)
+    // to p[MIN_GUI_PARAM].value, p[MIN_GUI_PARAM].value expressed in new units 
+    
+   
+ 
+    
+    TRACE("New xmin, xmax [unit]: %6.2f  %6.2f [%d]\n",
+          p[MIN_GUI_PARAM].value,
+          p[MAX_GUI_PARAM].value,
+          (int)p[TIME_UNIT_PARAM].value);
 
-    /* If time units have changed by server: client MUST configure x axis
-     * (ForceX is set for this purpose by server) to p[MIN_GUI_PARAM].value,
-     * expressed in new units.
-     */
-
-    TRACE("TR: New xmin, xmax [unit]: %6.2f  %6.2f [%d]\n",
-            p[MIN_GUI_PARAM].value,
-            p[MAX_GUI_PARAM].value,
-            (int)p[TIME_UNIT_PARAM].value);
 
     int64_t t_delay;
-
-    /* Calculate necessary trigger delay expressed in FPGA decimated cycles */
-    if (p[TRIG_MODE_PARAM].value == 0) {
-        /* Autotriggering mode => acquisition starts at time t = 0 */
-        t_delay= OSC_FPGA_SIG_LEN ;
-    } else {
-        t_delay= OSC_FPGA_SIG_LEN + (xmin * c_osc_fpga_smpl_freq / dec);
-    }
-
-    /* Trigger delay limitations/saturation */
-    const int64_t c_max_t_delay = ((int64_t)1 << 32) - 1;
+    
+    
+    // Calculating necessary trigger delay expressed in FPGA decimated cycles
+    if (p[TRIG_MODE_PARAM].value==0)  // Autotriggering mode => acquisition starts at time t=0
+     t_delay= OSC_FPGA_SIG_LEN ;
+    else
+     t_delay= OSC_FPGA_SIG_LEN + (xmin * c_osc_fpga_smpl_freq / dec);
+    
+    // Some limitations...
     if (t_delay < 0)
         t_delay = 0;
-    if (t_delay > c_max_t_delay)
-        t_delay = c_max_t_delay;
+    if (t_delay > ((int64_t)1 << 32) - 1)
+        t_delay = ((int64_t)1 << 32) - 1;
 
-    /* Trigger delay (reconverted in seconds) updated ONLY if client has responded to
-     * last forceX command.
-     */
-    if (forcex_state == 0) {
-        p[TRIG_DLY_PARAM].value = ((t_delay - OSC_FPGA_SIG_LEN) * dec / c_osc_fpga_smpl_freq);
-    } else {
-        p[TRIG_DLY_PARAM].value = forced_delay;
+    TRACE("Trigger delay: %d\n", (int)t_delay);
+    
+    
+    if (forcex_state==0)     // Trigger delay (reconverted in seconds) updated ONLY if client has responded to last forceX command
+    p[TRIG_DLY_PARAM].value = ((t_delay - OSC_FPGA_SIG_LEN) * dec / c_osc_fpga_smpl_freq);
+    else
+    p[TRIG_DLY_PARAM].value =forced_delay;  
+    
+   
+    // Server issues a forceX command when time units change wrt. GUI (client) units
+     if ((time_unit != time_unit_gui))
+    {
+     p[FORCEX_FLAG_PARAM].value  = 1.0;
+     forcex_state=1;
+     forced_xmin=p[MIN_GUI_PARAM].value;     // Other settings frozen until GUI recovers
+     forced_xmax=p[MAX_GUI_PARAM].value;
+     forced_units=p[TIME_UNIT_PARAM].value;
+     forced_delay=p[TRIG_DLY_PARAM].value;
     }
+      
+      
+     if (reset_zoom==1)                      // When client issues a zoom reset, a particular ForceX command with the initial 0 - 130 us time range 
+    {
+       
+       p[FORCEX_FLAG_PARAM].value  = 1.0;
+  
+       
+       forced_xmin=0.0;
+       forced_xmax=130.0;
+       forced_units=0.0;
+       forced_delay=0;
+       
+       forcex_state=1;
+       
+       p[MIN_GUI_PARAM].value = forced_xmin;
+       p[MAX_GUI_PARAM].value = forced_xmax;
+       p[TIME_UNIT_PARAM].value = forced_units;        
+       p[TRIG_DLY_PARAM].value=forced_delay;
+       p[TIME_RANGE_PARAM].value = 0;
+    }  
+      
+    
+    
+    
+    
+    TRACE("Trigger delay: %10.6f\n", p[TRIG_DLY_PARAM].value);
 
-    /* Server issues a forceX command when time units change wrt. GUI (client) units */
-    if ((time_unit != time_unit_gui)) {
-        p[FORCEX_FLAG_PARAM].value = 1.0;
-        forcex_state = 1;
-
-        /* Other settings frozen until GUI recovers */
-        forced_xmin = p[MIN_GUI_PARAM].value;
-        forced_xmax = p[MAX_GUI_PARAM].value;
-        forced_units = p[TIME_UNIT_PARAM].value;
-        forced_delay = p[TRIG_DLY_PARAM].value;
-    }
-
-    /* When client issues a zoom reset, a particular ForceX command with
-     * the initial 0 - 130 us time range.
-     */
-    if (reset_zoom == 1) {
-        p[FORCEX_FLAG_PARAM].value  = 1.0;
-        forcex_state = 1;
-
-        forced_xmin = 0.0;
-        forced_xmax = 130.0;
-        forced_units = 0.0;
-        forced_delay = 0;
-
-        p[MIN_GUI_PARAM].value = forced_xmin;
-        p[MAX_GUI_PARAM].value = forced_xmax;
-        p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
-        p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
-        p[TIME_UNIT_PARAM].value = forced_units;
-        p[TRIG_DLY_PARAM].value = forced_delay;
-        p[TIME_RANGE_PARAM].value = 0;
-    }
-
-    TRACE("TR: Trigger delay: %.6f\n", p[TRIG_DLY_PARAM].value);
-
+     
     return ret;
 }
 
-void get_scales(rp_app_params_t *p, float *scale1, float *scale2, float *maxv) {
-
-    /* Max ADC for Ch1, Ch2, both combined, normalized & selected */
-    uint32_t fe_fsg1 = (p[GAIN_CH1].value == 0) ?
-            rp_main_calib_params.fe_ch1_fs_g_hi :
-            rp_main_calib_params.fe_ch1_fs_g_lo;
-    float ch1_max_adc_v =
-            osc_fpga_calc_adc_max_v(fe_fsg1, p[PRB_ATT_CH1].value);
-
-    uint32_t fe_fsg2 = (p[GAIN_CH2].value == 0) ?
-            rp_main_calib_params.fe_ch2_fs_g_hi :
-            rp_main_calib_params.fe_ch2_fs_g_lo;
-    float ch2_max_adc_v =
-            osc_fpga_calc_adc_max_v(fe_fsg2, p[PRB_ATT_CH2].value);
-
-    float max_adc_norm = osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_hi, 0);
-
-    *scale1 = ch1_max_adc_v / max_adc_norm;
-    *scale2 = ch2_max_adc_v / max_adc_norm;
-    *maxv = (ch1_max_adc_v > ch2_max_adc_v) ?
-             ch1_max_adc_v : ch2_max_adc_v;
-}
-
-void transform_to_iface_units(rp_app_params_t *p)
-{
-    float scale, scale1, scale2, maxv;
-    get_scales(p, &scale1, &scale2, &maxv);
-    scale = (scale1 > scale2) ? scale1 : scale2;
-
-    /* Re-calculate output parameters */
-    p[GUI_RST_Y_RANGE].value = 2.0 * maxv;
-
-    p[MIN_Y_PARAM].value = p[MIN_Y_NORM].value * scale;
-    p[MAX_Y_PARAM].value = p[MAX_Y_NORM].value * scale;
-
-    p[GEN_DC_OFFS_1].value = p[GEN_DC_NORM_1].value * scale1;
-    p[GEN_DC_OFFS_2].value = p[GEN_DC_NORM_2].value * scale2;
-
-    p[SCALE_CH1].value = scale1;
-    p[SCALE_CH2].value = scale2;
-}
-
-void transform_from_iface_units(rp_app_params_t *p)
-{
-    float scale1, scale2, maxv;
-    get_scales(p, &scale1, &scale2, &maxv);
-
-    /* Re-calculate input parameters */
-    p[GEN_DC_NORM_1].value = p[GEN_DC_OFFS_1].value / scale1;
-    p[GEN_DC_NORM_2].value = p[GEN_DC_OFFS_2].value / scale2;
-}
 
 int rp_set_params(rp_app_params_t *p, int len)
 {
@@ -625,12 +556,10 @@ int rp_set_params(rp_app_params_t *p, int len)
     int fpga_update = 1;
     int params_change = 0;
     int awg_params_change = 0;
-    int pid_params_change = 0;
     
-    TRACE("%s()\n", __FUNCTION__);
 
     if(len > PARAMS_NUM) {
-        fprintf(stderr, "Too many parameters, max=%d\n", PARAMS_NUM);
+        fprintf(stderr, "Too much parameters, max=%d\n", PARAMS_NUM);
         return -1;
     }
 
@@ -664,10 +593,8 @@ int rp_set_params(rp_app_params_t *p, int len)
         if(rp_main_params[p_idx].value != p[i].value) {
             if(p_idx < PARAMS_AWG_PARAMS) 
                 params_change = 1;
-            if ( (p_idx >= PARAMS_AWG_PARAMS) && (p_idx < PARAMS_PID_PARAMS) )
+            if(p_idx >= PARAMS_AWG_PARAMS)
                 awg_params_change = 1;
-            if(p_idx >= PARAMS_PID_PARAMS)
-                pid_params_change = 1;
             if(rp_main_params[p_idx].fpga_update)
                 fpga_update = 1;
         }
@@ -682,17 +609,13 @@ int rp_set_params(rp_app_params_t *p, int len)
         }
         rp_main_params[p_idx].value = p[i].value;
     }
-    transform_from_iface_units(&rp_main_params[0]);
     pthread_mutex_unlock(&rp_main_params_mutex);
     
 
-    /* Set parameters in HW/FPGA only if they have changed */
+    
     if(params_change || (params_init == 0)) {
 
         pthread_mutex_lock(&rp_main_params_mutex);
-        /* Xmin & Xmax public copy to be served to clients */
-        rp_main_params[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
-        rp_main_params[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         transform_acq_params(rp_main_params);
         pthread_mutex_unlock(&rp_main_params_mutex);
 
@@ -707,13 +630,13 @@ int rp_set_params(rp_app_params_t *p, int len)
         float t_delay = rp_main_params[TRIG_DLY_PARAM].value;
         float t_unit_factor = 1; /* to convert to seconds */
 
+        TRACE("After T: %d, %dx\n", time_range, dec_factor);
         /* Our time window with current settings:
          *   - time_delay is added later, when we check if it is correct 
          *     setting 
          */
         float t_min = 0;
         float t_max = ((OSC_FPGA_SIG_LEN-1) * smpl_period);
-        float t_max_minus = ((OSC_FPGA_SIG_LEN-6) * smpl_period);
 
         params_init = 1;
         /* in time units time_unit, needs to be converted */
@@ -722,15 +645,15 @@ int rp_set_params(rp_app_params_t *p, int len)
         int t_start_idx;
         int t_stop_idx;
         int t_step_idx = 0;
+        float ch1_max_adc_v, ch2_max_adc_v;
+        float ch1_delta, ch2_delta;
 
         /* If auto-set algorithm was requested do not set other parameters */
         if(rp_main_params[AUTO_FLAG_PARAM].value == 1) {
-            auto_in_progress = 1;
-            forcex_state = 0;
-
             rp_osc_clean_signals();
             rp_osc_worker_change_state(rp_osc_auto_set_state);
             /* AUTO_FLAG_PARAM is cleared when Auto-set algorithm finishes */
+            /*            rp_main_params[AUTO_FLAG_PARAM].value = 0;*/
             
             /* Wait for auto-set algorithm to finish or timeout */
             int timeout = 10000000; // [us]
@@ -751,12 +674,10 @@ int rp_set_params(rp_app_params_t *p, int len)
                 fprintf(stderr, "AUTO: Timeout waiting for AUTO-set algorithm to finish.\n");
             }
 
-            auto_in_progress = 0;
-
             return 0;
         }
 
-        /* If AUTO trigger mode, reset trigger delay */
+        /* if AUTO reset trigger delay */
         if(mode == 0) 
             t_delay = 0;
 
@@ -765,25 +686,26 @@ int rp_set_params(rp_app_params_t *p, int len)
             return -1;
         }
 
-        /* Pick time unit and unit factor corresponding to current time range. */
+        /* pick correct which time unit is selected */
         if((time_range == 0) || (time_range == 1)) {
             time_unit     = 0;
             t_unit_factor = 1e6;
         } else if((time_range == 2) || (time_range == 3)) {
             time_unit     = 1;
             t_unit_factor = 1e3;
-        }
+        } 
+
+        TRACE("After T: time_unit = %d\n", time_unit);
 
         rp_main_params[TIME_UNIT_PARAM].value = time_unit;
-        TRACE("PC: time_(R,U) = (%d, %d)\n", time_range, time_unit);
 
         /* Check if trigger delay in correct range, otherwise correct it
          * Correct trigger delay is:
-         *  t_delay >= -t_max_minus
+         *  t_delay >= -t_max
          *  t_delay <= OSC_FPGA_MAX_TRIG_DELAY
          */
-        if(t_delay < -t_max_minus) {
-            t_delay = -t_max_minus;
+        if(t_delay < -t_max) {
+            t_delay = -t_max;
         } else if(t_delay > (OSC_FPGA_TRIG_DLY_MASK * smpl_period)) {
             t_delay = OSC_FPGA_TRIG_DLY_MASK * smpl_period;
         } else {
@@ -793,10 +715,9 @@ int rp_set_params(rp_app_params_t *p, int len)
         t_max = t_max + t_delay;
         rp_main_params[TRIG_DLY_PARAM].value = t_delay;
 
-        /* Convert to seconds */
+        /* convert to seconds */
         t_start = t_start / t_unit_factor;
         t_stop  = t_stop  / t_unit_factor;
-        TRACE("PC: t_stop = %.9f\n", t_stop);
 
         /* Select correct time window with this settings:
          * time window is defined from:
@@ -824,20 +745,71 @@ int rp_set_params(rp_app_params_t *p, int len)
         t_start_idx = round(t_start / smpl_period);
         t_stop_idx  = round(t_stop / smpl_period);
 
-        if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) >= 1) {
+        if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) < 1)
+            t_step_idx = 1;
+        else {
             t_step_idx = ceil((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1));
             int max_step = OSC_FPGA_SIG_LEN/SIGNAL_LENGTH;
             if(t_step_idx > max_step)
                 t_step_idx = max_step;
-
-            t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
         }
 
-        TRACE("PC: t_stop (rounded) = %.9f\n", t_stop);
+        t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
 
         /* write back and convert to set units */
         rp_main_params[MIN_GUI_PARAM].value = t_start;
         rp_main_params[MAX_GUI_PARAM].value = t_stop;
+
+        /* Calculate new gui_reset_y_range */
+        if(rp_main_params[GAIN_CH1].value == 0) {
+            ch1_max_adc_v = 
+                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_hi, 
+                                        rp_main_params[PRB_ATT_CH1].value);
+        } else {
+            ch1_max_adc_v = 
+                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_lo, 
+                                        rp_main_params[PRB_ATT_CH1].value);
+        }
+        if(rp_main_params[GAIN_CH2].value == 0) {
+            ch2_max_adc_v = 
+                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_hi, 
+                                        rp_main_params[PRB_ATT_CH2].value);
+        } else {
+            ch2_max_adc_v = 
+                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_lo, 
+                                        rp_main_params[PRB_ATT_CH2].value);
+        }
+
+        if(ch1_max_adc_v > ch2_max_adc_v)
+            rp_main_params[GUI_RST_Y_RANGE].value = 2.0 * ch1_max_adc_v;
+        else
+            rp_main_params[GUI_RST_Y_RANGE].value = 2.0 * ch2_max_adc_v;
+
+        /* Re-calculate output parameters */
+        ch1_delta = (ch1_max_adc_v / rp_main_ch1_max_adc_v);
+        ch2_delta = (ch2_max_adc_v / rp_main_ch2_max_adc_v);
+
+        rp_main_ch1_max_adc_v = ch1_max_adc_v;
+        rp_main_ch2_max_adc_v = ch2_max_adc_v;
+
+        if(ch1_delta > ch2_delta) {
+            rp_main_params[MIN_Y_PARAM].value *= ch1_delta;
+            rp_main_params[MAX_Y_PARAM].value *= ch1_delta;
+        } else {
+            rp_main_params[MIN_Y_PARAM].value *= ch2_delta;
+            rp_main_params[MAX_Y_PARAM].value *= ch2_delta;
+        }
+        rp_main_params[GEN_DC_OFFS_1].value *= ch1_delta;
+        rp_main_params[GEN_DC_OFFS_2].value *= ch2_delta;
+
+        if((int)rp_main_params[TRIG_SRC_PARAM].value == 0) {
+            /* Trigger selected on Channel 1 */
+            rp_main_params[TRIG_LEVEL_PARAM].value *= ch1_delta;
+        } else {
+            /* Trigger selected on Channel 2 */
+            rp_main_params[TRIG_LEVEL_PARAM].value *= ch2_delta;
+        }
+
 
         rp_osc_worker_update_params((rp_app_params_t *)&rp_main_params[0], 
                                     fpga_update);
@@ -877,15 +849,8 @@ int rp_set_params(rp_app_params_t *p, int len)
         rp_main_params[GEN_SIG_FREQ_CH2].value = 
             rp_gen_limit_freq(rp_main_params[GEN_SIG_FREQ_CH2].value,
                               rp_main_params[GEN_SIG_TYPE_CH2].value);
-        if(generate_update(&rp_main_params[0]) < 0) {
+        if(generate_update(&rp_main_params[0]) < 0)
             return -1;
-        }
-    }
-
-    if (pid_params_change) {
-        if(pid_update(&rp_main_params[0]) < 0) {
-            return -1;
-        }
     }
 
     return 0;
@@ -895,6 +860,7 @@ int rp_set_params(rp_app_params_t *p, int len)
 int rp_get_params(rp_app_params_t **p)
 {
     rp_app_params_t *p_copy = NULL;
+    int t_unit_factor;
     int i;
 
     p_copy = (rp_app_params_t *)malloc((PARAMS_NUM+1) * sizeof(rp_app_params_t));
@@ -902,6 +868,9 @@ int rp_get_params(rp_app_params_t **p)
         return -1;
 
     pthread_mutex_lock(&rp_main_params_mutex);
+    t_unit_factor =  
+        rp_osc_get_time_unit_factor(rp_main_params[TIME_UNIT_PARAM].value);
+
     for(i = 0; i < PARAMS_NUM; i++) {
         int p_strlen = strlen(rp_main_params[i].name);
         p_copy[i].name = (char *)malloc(p_strlen+1);
@@ -918,11 +887,8 @@ int rp_get_params(rp_app_params_t **p)
     pthread_mutex_unlock(&rp_main_params_mutex);
     p_copy[PARAMS_NUM].name = NULL;
 
-    /* Return the original public Xmin & Xmax to client (not the internally modified ones). */
-    p_copy[MIN_GUI_PARAM].value = p_copy[GUI_XMIN].value;
-    p_copy[MAX_GUI_PARAM].value = p_copy[GUI_XMAX].value;
-
-    transform_to_iface_units(p_copy);
+    p_copy[MIN_GUI_PARAM].value = p_copy[MIN_GUI_PARAM].value * t_unit_factor;
+    p_copy[MAX_GUI_PARAM].value = p_copy[MAX_GUI_PARAM].value * t_unit_factor;
 
     *p = p_copy;
     return PARAMS_NUM;
@@ -940,16 +906,20 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
     *sig_len = SIGNAL_LENGTH;
 
     ret_val = rp_osc_get_signals(s, &sig_idx);
-
-    /* Not finished signal */
+    
+    if(ret_val == 0){
+      printf("Starting OK\n");
+    }
+   //Not finished signal
     if((ret_val != -1) && sig_idx != SIGNAL_LENGTH-1) {
         return -2;
     }
-    /* Old signal */
+    
+    //Old signal
     if(ret_val < 0) {
         return -1;
     }
-
+    
     return 0;
 }
 
@@ -1070,8 +1040,6 @@ int rp_copy_params(rp_app_params_t *src, rp_app_params_t **dst)
         
     }
 
-    /* p_new[B_WAIT].value = 20; for testing */
-
     *dst = p_new;
     return 0;
 }
@@ -1111,7 +1079,7 @@ int rp_update_main_params(rp_app_params_t *params)
         return -1;
 
     pthread_mutex_lock(&rp_main_params_mutex);
-    while(params[i].name != NULL) {  
+    while(params[i].name != NULL) {
         rp_main_params[i].value = params[i].value;
         i++;
     }
@@ -1131,8 +1099,6 @@ int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
     rp_main_params[MEAS_AVG_CH1].value = ch1_meas.avg;
     rp_main_params[MEAS_FREQ_CH1].value = ch1_meas.freq;
     rp_main_params[MEAS_PER_CH1].value = ch1_meas.period;
-
-    /* rp_main_params[B_WAIT].value = 200; for testing*/
 
     rp_main_params[MEAS_MIN_CH2].value = ch2_meas.min;
     rp_main_params[MEAS_MAX_CH2].value = ch2_meas.max;
@@ -1173,3 +1139,57 @@ float rp_gen_limit_freq(float freq, float gen_type)
 
     return freq;
 }
+
+/* Used for setting the time range param in the lcr function in lcr.c */
+void rp_set_time_range(float f){
+  rp_main_params[TIME_RANGE_PARAM].value = f;
+}
+
+
+/* For testing purposes only. Sets the value of ch1 minimum to be x */
+void rp_set_mes_data(float x){
+  rp_main_params[MEAS_MIN_CH1].value = x;
+}
+
+
+
+float rp_get_params_lcr(int pos){
+  switch (pos){
+    case 0:
+      return rp_main_params[START_MEASURE].value;
+    case 1:
+      return rp_main_params[LCR_STEPS].value;
+    case 2:
+      return rp_main_params[GEN_AMP].value;
+    case 3:
+      return rp_main_params[GEN_AVG].value;
+    case 4:
+      return rp_main_params[GEN_DC_BIAS].value;
+    case 5:
+      return rp_main_params[GEN_R_SHUNT].value;
+    case 6:
+      return rp_main_params[START_FREQ].value;
+    case 7:
+      return rp_main_params[END_FREQ].value;
+    case 8:
+      return rp_main_params[LCR_SCALE_TYPE].value;
+    case 9:
+      return rp_main_params[GEN_FS_LOADRE].value;
+    case 10:
+      return rp_main_params[GEN_FS_LOADIM].value;
+    case 11:
+      return rp_main_params[LCR_CALIBRATION].value;
+    case 15:
+      return rp_main_params[PLOT_Y_SCALE_DATA].value;
+    default:
+      return -1;
+  }
+}
+
+void rp_set_params_lcr(int pos, float val){
+  switch(pos){
+    case 0:
+      rp_main_params[START_MEASURE].value = val;
+  }
+}
+
