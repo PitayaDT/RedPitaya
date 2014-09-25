@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>scope_test_dev</title>
+  <title>lcr_dev</title>
   <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
   <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
   <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
@@ -59,6 +59,7 @@
     touch: { autoWidth: false, autoHeight: false }
   };
   
+  var counter = 0;
   // Settings which should not be modified
   
   var update_timer = null;
@@ -80,9 +81,6 @@
     original: null,
     local: null
   };
-
-  //comment: -my vars
-  var first_time = 0;
   
   // Default parameters - posted after server side app is started 
   var def_params = {
@@ -758,8 +756,25 @@
       if(long_timeout_used) {
         use_long_timeout = false;
       }
+
+      var table = document.getElementById('measurment_table');
+
+    if(counter < 100 && params.local.start_measure == 0){
+      var tr = document.createElement('tr');
+
+      var td = document.createElement('td');
+
+
+      var frequency = document.createTextNode(params.local.frequency_meas);
+
+      td.appendChild(frequency);
+      tr.appendChild(td);
+      table.appendChild(tr);
+      counter++;
+    }
     });
     autoscaleY();
+
   }
   
   function initPlot(init_params) {
@@ -780,25 +795,12 @@
     var filtered_data = filterData(datasets, plot_holder.width());
   
     // Plot first creation and drawing
-    //comment
-    alert(first_time);
-    if(first_time == 0)
-    {
-      plot = $.plot(
-        plot_holder, 
-        [],
-        plot_options
-      );
-      first_time = 1;
-    }
-    else
-    {
-      plot = $.plot(
-        plot_holder, 
-        filtered_data,
-        plot_options
-      );
-    }  
+    plot = $.plot(
+      plot_holder, 
+      filtered_data,
+      plot_options
+    );
+    
     // Selection
     plot_holder.on('plotselected', function(event, ranges) {
     
@@ -935,6 +937,8 @@
     
     updateTimeUnits(orig_params);
     $('#ytitle').show();
+
+
   
   }
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
@@ -1095,6 +1099,8 @@
       }
     }
     rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+
+
     return rangedata;
   }
   
@@ -1116,8 +1122,7 @@
       if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
         var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
         var k = 0;
-        //comment for(var j=0; j<dsets[i].data.length; j++) {
-        for(var j=0; j < 10; j++) {
+        for(var j=0; j<dsets[i].data.length; j++) {
           if(k > 0 && ++k < step) {
             continue;
           }
@@ -1295,9 +1300,8 @@
       return;
     }
     
-    //comment $('#btn_ch1, #btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');
     $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
-
+    
     var ymax = params.original.gui_reset_y_range / 2;
     var ymin = ymax * -1;
     
@@ -1918,34 +1922,10 @@
     sendParams();
  }
 
- function showMeasure(){
-  var y_axis = document.getElementById('apply_Yaxis').value;
-
-  if(y_axis == 0){
-    params.local.plot_y_scale_data = 0;
-  }else if(y_axis == 8){
-    params.local.plot_y_scale_data = 1;
+  function showMeasure(){
+    params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+    sendParams();
   }
-
-  /* TODO: Switch Axis
-  switch(y_axis){
-    case 0:
-      params.local.plot_y_scale_data = 0;
-      break;
-    case 8:
-      params.local.plot_y_scale_data = 1;
-      break;
-  }
-  */
-  //alert(params.local.plot_y_scale_data);
-  
-  //TODO:Getter, setter for variable change params.local.fla_gutton as var 2;
-
-
-sendParams();
-
-  
-}
 
   
   </script>
@@ -2012,10 +1992,10 @@ sendParams();
           <div id="xtitle"></div>
         </div>  
         <div class="table-holder well">
-          <table id="table">
+          <table id="measurment_table">
         <tr>
-            <th id="c_1">  </th>
-            <th id="c_2">  </th>
+            <th id="c_1">Frequency</th>
+            <th id="c_2"></th>
             <th id="c_3">  </th>
             <th id="c_4">  </th>
           </tr>
@@ -2100,7 +2080,7 @@ sendParams();
                   <div class="form-group">
                     <label for="gen_ms_freq" class="col-xs-4 control-label">Frequency:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_ms_freq">
+                      <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_ms_freq">
                       <span id="apply_gen_ms_freq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2140,10 +2120,10 @@ sendParams();
             <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Calibration:</label>
                    <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_ms_OSCalib">
-                        <option value="0">Open</option>
-                        <option value="1">Short</option>
-                        <option value="2">Load</option>
-                        <option value="3">None</option>
+                        <option value="0">None</option>
+                        <option value="1">Open</option>
+                        <option value="2">Short</option>
+                        <option value="3">Load</option>
                       </select>
                     </div>
           </div>
@@ -2222,10 +2202,10 @@ sendParams();
             <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Calibration:</label>
           <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_OSCalib">
-                        <option value="0">Open</option>
-                        <option value="1">Short</option>
-                        <option value="2">Load</option>
-                        <option value="3">None</option>
+                        <option value="0">None</option>
+                        <option value="1">Open</option>
+                        <option value="2">Short</option>
+                        <option value="3">Load</option>
                       </select>
                     </div>
           </div>
@@ -2251,7 +2231,7 @@ sendParams();
                     <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
           <div>
-          <button id="btn_start_frequency_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
+          <button id="btn_start_frequency_sweep" class="btn btn-lg btn-warning" data-checked="true" onclick="startMeasure(this.id)"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>Start</button>
           </div>
         </div>
         
@@ -2390,17 +2370,6 @@ sendParams();
             <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Xaxis">
                       <option value="0">Frequency</option>
-                      <option value="11">Rs</option>
-                      <option value="1">Ls</option>
-                      <option value="2">Cp</option>
-                      <option value="3">Cs</option>
-                      <option value="4">Rp</option>
-                      <option value="5">Q</option>
-                      <option value="6">D</option>
-                      <option value="7">Y</option>
-                      <option value="8">Z</option>
-                      <option value="9">|Z|</option>
-                      <option value="10">|Y|</option>
                     </select>
             </div>
         </div>
@@ -2408,18 +2377,20 @@ sendParams();
           <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
             <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Yaxis">
-                      <option value="8">Amplitude</option>
-                      <option value="11">Rs</option>
-                      <option value="1">Ls</option>
-                      <option value="2">Cp</option>
-                      <option value="3">Cs</option>
-                      <option value="4">Rp</option>
-                      <option value="5">Q</option>
-                      <option value="6">D</option>
-                      <option value="7">Y</option>
-                      <option value="9">|Z|</option>
-                      <option value="10">|Y|</option>
-                      <option value="0">Phase</option>
+                      <option value="0">Amplitude</option>
+                      <option value="1">Phase</option>
+                      <option value="2">Y abs</option>
+                      <option value="3">Phase Y</option>
+                      <option value="4">Rs</option>
+                      <option value="5">Xs</option>
+                      <option value="6">Gp</option>
+                      <option value="7">Cs</option>
+                      <option value="8">Cp</option>
+                      <option value="9">Ls</option>
+                      <option value="10">Lp</option>
+                      <option value="11">Rp</option>
+                      <option value="12">Q</option>
+                      <option value="13">D</option>
                     </select>
                   </div>
         </div>
