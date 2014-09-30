@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>lcr_dev</title>
+  <title>scope_test</title>
   <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
   <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
   <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
@@ -51,8 +51,8 @@
   var plot_options = {
     colors: ['#3276B1', '#D2322D', '#009900'],    // channel1, channel2, trigger line
     lines: { lineWidth: 1 },
-    selection: { mode: 'xy' },
-    zoom: { interactive: true, trigger: null },
+    selection: { mode: null }, //comment mode: null
+    zoom: { interactive: false, trigger: null },  //comment interactive: true
     xaxis: { min: xmin, max: xmax },
     grid: { borderWidth: 0 },
     legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
@@ -81,13 +81,12 @@
     original: null,
     local: null
   };
-
-  var recived_data = 0;
   
   // Default parameters - posted after server side app is started 
   var def_params = {
     en_avg_at_dec: 0
   }; 
+  var myApp;
     
   // On page loaded
   
@@ -98,13 +97,13 @@
       $('.btn-lg').removeClass('btn-lg');
       $('#accordion .btn, .modal .btn').addClass('btn-sm');
       $('#btn_zoompan').remove();
-      $('#btn_zoomin, #btn_zoomout, #btn_pan').show();
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').hide(); //comment .show();
     }
     else {
       update_interval = update_interval_mobdev;
       meas_panel_dec = meas_panel_dec_mobdev;
       $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
-      $('#btn_zoompan').show();
+      $('#btn_zoompan').hide(); //comment .show();
     }
     
     // Add application ID in the message from modal popup
@@ -758,8 +757,8 @@
       if(long_timeout_used) {
         use_long_timeout = false;
       }
-
-      var table = document.getElementById('measurment_table');
+    /*
+    var table = document.getElementById('measurment_table');
 
     if(counter < 100 && params.local.start_measure == 0){
       var tr = document.createElement('tr');
@@ -774,6 +773,7 @@
       table.appendChild(tr);
       counter++;
     }
+    */
     });
     autoscaleY();
 
@@ -945,6 +945,7 @@
   }
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
+
     if(! $.isPlainObject(new_params)) {
       return;
     } 
@@ -954,7 +955,10 @@
     var timeu_lbl = (params.original.time_units == 0 ? 'μs' : (params.original.time_units == 1 ? 'ms' : 's'));
    // $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
   
-  
+  //comment
+  if( params.local.start_measure != 1)
+    hideWaitBar();
+
   if(flag_graph==1)
   {
     var di=document.getElementById("apply_Yaxis").selectedIndex;
@@ -1000,6 +1004,8 @@
   }
   
   function sendParams(refresh_data, force_send, single_btn) {
+
+
     if(sending || (force_send !== true && !isParamChanged())) {
       send_que = sending;
       return;
@@ -1877,6 +1883,8 @@
   }
  
  function startMeasure(clicked_measure){
+    myApp.showPleaseWait();
+
     if(clicked_measure == 'btn_start_frequency_sweep'){
       //TODO: Add parameter check!
       
@@ -1922,6 +1930,7 @@
       
     }
     sendParams();
+    //myApp.hidePleaseWait();
  }
 
   function showMeasure(){
@@ -1929,6 +1938,69 @@
     sendParams();
   }
 
+
+  $(function(){
+    $('.btn-choose').click(function() { 
+        $(this).toggleClass('stay-active');
+    });
+  });
+ 
+ 
+ var flag_table = 1;
+ var flag_graph = 1;
+ 
+ function change_graph()
+ {
+  flag_graph=1;
+ }
+ 
+ function change_table()
+ {
+  flag_table=1;
+  myApp.showPleaseWait();
+  setTimeout(function(){myApp.hidePleaseWait();}, 3000);
+ }
+ 
+
+ 
+ 
+ 
+    /* function selectAmpPhase(toolname) {
+      $('#toggle .btn').removeClass('btn-primary').addClass('btn-default');
+      $(this).toggleClass('btn-default btn-primary');
+    
+      if(toolname == 'amp') {
+      }
+      if(toolname == 'phase') {
+      }
+      else if(toolname == 'pan') {
+      }
+  } */
+ 
+   $('#pleaseWaitDialog').css({
+    'background-image': 'none',
+    'background-color': 'red'
+    });
+ 
+ 
+  
+  myApp = myApp || (function () {
+    var pleaseWaitDiv = $('<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1>Measuring...</h1></div><div class="modal-body"><div class="progress progress-bar-danger progress-striped active"><div class="bar" style="width: 100%;"></div></div></div></div></div></div>');
+    return {
+        showPleaseWait: function() {
+            pleaseWaitDiv.modal();
+        },
+        hidePleaseWait: function () {
+            pleaseWaitDiv.modal('hide');
+        },
+
+    };
+  })();
+
+  function hideWaitBar()
+  {
+    myApp.hidePleaseWait();
+  }
   
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
@@ -1938,7 +2010,7 @@
     <div class="container">
       <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
       <img class="logo pull-left" src="../assets/images/logo_white.png">
-      <h2 class="page-title">LCR meter</h2>
+      <h2 class="page-title">scope_test</h2>
     </div>
   </div>
   <div class="container">
@@ -2381,6 +2453,7 @@
                     <select class="form-control" id="apply_Yaxis">
                       <option value="0">Amplitude</option>
                       <option value="1">Phase</option>
+                      <!-- //comment
                       <option value="2">Y abs</option>
                       <option value="3">Phase Y</option>
                       <option value="4">Rs</option>
@@ -2393,6 +2466,7 @@
                       <option value="11">Rp</option>
                       <option value="12">Q</option>
                       <option value="13">D</option>
+                      -->
                     </select>
                   </div>
         </div>
