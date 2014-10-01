@@ -382,11 +382,11 @@ fieldset[disabled] .btn-primary.active {
 
 
 
-#tabelca {
+#measurment_table{
 width: 100%;
 border-radius:25px;
 }
-#tabelca,th,tr {
+#measurment_table,th,tr {
 border: 1px solid black;
 border-radius: 25px;
 border-collapse:collapse;
