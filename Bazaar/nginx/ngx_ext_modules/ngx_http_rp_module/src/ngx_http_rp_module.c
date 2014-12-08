@@ -45,6 +45,8 @@ const char *c_bazaar_server  = "http://bazaar.redpitaya.com";
 const char *c_tmp_dir        = "/tmp";
 
 const char *c_bazaar_uri = "/bazaar";
+
+
 const char *c_data_uri   = "/data";
 
 ngx_http_rp_module_ctx_t rp_module_ctx;
