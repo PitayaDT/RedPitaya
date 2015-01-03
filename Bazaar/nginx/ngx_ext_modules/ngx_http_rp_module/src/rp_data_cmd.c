@@ -51,7 +51,7 @@ typedef struct rp_data_ctx_s {
  *                                         POST: returned value from ngx_http_read_client_request_body() or NGX_DONE
  */
 
-ngx_int_t a(ngx_http_request_t *r)
+ngx_int_t rp_data_cmd_handler(ngx_http_request_t *r)
 {
     cJSON *json_root, *data_root, *app_root;
     int ret_val = 0;
@@ -398,12 +398,10 @@ int rp_data_get_params(ngx_http_request_t *r, cJSON **json_root)
                               r->pool);
     }
 
-    /* Free params space */
     for(i = 0; i < rp_params_cnt; i++) {
         if(rp_params[i].name)
             free((char *)rp_params[i].name);
     }
-    /* Free params data structure allocation if not NULL */
     if(rp_params)
         free(rp_params);
 
@@ -421,14 +419,12 @@ int rp_data_get_signals(ngx_http_request_t *r, cJSON **json_root)
 
     if(rp_signals == NULL) {
         int i;
-        /* Allocate signals number */
-        rp_signals = (float **)malloc(3 * sizeof(float *));
-        for(i = 0; i < 3; i++) {
-            /* 3 signals of size 2048 */
+        rp_signals = (float **)malloc(5 * sizeof(float *));
+        for(i = 0; i < 5; i++) {
             rp_signals[i] = (float *)malloc(2048 * sizeof(float));
         }
     }
-    /* Get datasets from json root object and print error, if it's null */
+
     data_root = cJSON_GetObjectItem(*json_root, "datasets");
     if(data_root == NULL) {
         return rp_module_cmd_error(json_root, 
@@ -436,12 +432,10 @@ int rp_data_get_signals(ngx_http_request_t *r, cJSON **json_root)
                                    r->pool);
     }
     
-    /* Call of the main.c function get signals */
     ret_val =
         rp_module_ctx.app.get_signals_func((float ***)&rp_signals, &rp_sig_num, 
                                            &rp_sig_len);
 
-    /* Loop until is different than -1 */
     while(ret_val == -1) {
         ret_val =
             rp_module_ctx.app.get_signals_func((float ***)&rp_signals, 
@@ -462,26 +456,38 @@ int rp_data_get_signals(ngx_http_request_t *r, cJSON **json_root)
         ret_val = 0;
     rp_signals_dirty = 1;
 
-    /* Add g1 data object */
     cJSON_AddItemToObject(data_root, "g1",
                           g1=cJSON_CreateArray(r->pool), r->pool);
 
-    /* Add data object */
     cJSON_AddItemToObject(g1, "g1", 
                           sig_root=cJSON_CreateObject(r->pool), r->pool);
-
-    /* Add first signal with X coordinates rp_signals[0][0] and Y coordinates rp_signals[1][0] */
     cJSON_AddItemToObject(sig_root, "data",
                    d1=cJSON_Create2dFloatArray(&rp_signals[0][0], &rp_signals[1][0],
                                                rp_sig_len, r->pool),
                           r->pool);
-
     cJSON_AddItemToObject(g1, "g1", 
                           sig_root=cJSON_CreateObject(r->pool), r->pool);
-
-    /* Add second signal with X coordinates rp_signals[0][0] and Y coordinates rp_signals[2][0] */
     cJSON_AddItemToObject(sig_root, "data",
                    d2=cJSON_Create2dFloatArray(&rp_signals[0][0], &rp_signals[2][0],
+                                               rp_sig_len, r->pool),
+                          r->pool);
+    int i,k;
+    for (i = 3; i < 5; i++)
+    {
+        for (k = 0; k < 2048; k++)
+        {
+            rp_signals[i][k] = k;
+        }
+        
+    }
+
+    cJSON_AddItemToObject(sig_root, "sig_4",
+                   d2=cJSON_Create2dFloatArray(&rp_signals[0][0], &rp_signals[3][0],
+                                               rp_sig_len, r->pool),
+                          r->pool);
+
+    cJSON_AddItemToObject(sig_root, "sig_5",
+                   d2=cJSON_Create2dFloatArray(&rp_signals[0][0], &rp_signals[4][0],
                                                rp_sig_len, r->pool),
                           r->pool);
 
