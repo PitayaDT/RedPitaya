@@ -25,11 +25,12 @@ char *buf;
 float *fbuf;
 
 int ws_stop;
+struct ws_package_data *data;
 
 int websocket_init(void){
-	int ret = 0;
+    int ret = 0;
 
-	sw_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
+    sw_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
     if(sw_thread_handler == NULL) {
         return -1;
     }
@@ -46,7 +47,7 @@ int websocket_init(void){
 }
 
 int websocket_exit(void){
-	int ret = 0;
+    int ret = 0;
     ws_stop = 1;
     if(sw_thread_handler) {
         ret = pthread_join(*sw_thread_handler, NULL);
@@ -63,12 +64,12 @@ int websocket_exit(void){
 
 /* We do not accept any http requests */
 static int callback_http(struct libwebsocket_context *context, struct libwebsocket *wsi,
-	enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len){
+    enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len){
 
-	return 0;
+    return 0;
 }
 
-void rp_prepare_signals(float *fbuf, struct session_data *data){
+void rp_prepare_signals(float *fbuf){
 
     int rp_sig_num, rp_sig_len;
     int ret;
@@ -77,11 +78,11 @@ void rp_prepare_signals(float *fbuf, struct session_data *data){
 
     data->payload = 0;
     
-	int retries = 200; //ms
-	do{
-		ret = rp_module_ctx.app.get_signals_func((float ***)&rp_signals, &rp_sig_num, &rp_sig_len);
+    int retries = 200; //ms
+    do{
+        ret = rp_module_ctx.app.get_signals_func((float ***)&rp_signals, &rp_sig_num, &rp_sig_len); //get signals
 
-		if(ret == -2)
+        if(ret == -2)
             break;
         if(retries-- <= 0) {
             /* Use old signals */
@@ -90,11 +91,12 @@ void rp_prepare_signals(float *fbuf, struct session_data *data){
             usleep(1000);
         }
 
-	}while (ret == -1);
+    }while (ret == -1);
 
-	/* Populate arrayBuffer */
+    /* Populate arrayBuffer */
+    //Overwrite sig_len with 50 -- TODO: Update to latest ws library for larger buff size.
     rp_sig_len = 50;
-	/* X vector */
+    /* X vector */
     for (i = 0; i < rp_sig_len; i++) {
         fbuf[k++] = rp_signals[0][i];
     }
@@ -108,34 +110,35 @@ void rp_prepare_signals(float *fbuf, struct session_data *data){
         }
     }
 
+    /* Init payload for the current ws packet */
     data->payload = k * sizeof(float); //How big is the body of the websocket packet.
 }
 
 static int rp_signals_callback(struct libwebsocket_context *context, 
-									   struct libwebsocket *wsi,
-									   enum libwebsocket_callback_reasons reason,
-									   void *user, void *in, size_t len){
+                                       struct libwebsocket *wsi,
+                                       enum libwebsocket_callback_reasons reason,
+                                       void *user, void *in, size_t len){ // pointer to `void *in` holds the incomming request
 
-	struct session_data *data = user;
+    struct ws_package_data *data_usr = user;
 
-	switch(reason) {
-		case LWS_CALLBACK_ESTABLISHED: {// just log message that someone is connecting
+    switch(reason) {
+        case LWS_CALLBACK_ESTABLISHED: {// just log message that someone is connecting
             printf("connection established\n");
             break;
         }
         case LWS_CALLBACK_RECEIVE: {
-        	rp_prepare_signals(fbuf, data);
-        	
-        	unsigned char *fbp = (unsigned char *)fbuf;
+            rp_prepare_signals(fbuf);
+            
+            unsigned char *fbp = (unsigned char *)fbuf;
 
-        	libwebsocket_write(wsi, fbp, data->payload, LWS_WRITE_BINARY);
+            libwebsocket_write(wsi, fbp, data_usr->payload, LWS_WRITE_BINARY); //Binary type
         }
         case LWS_CALLBACK_CLOSED:
-        	fprintf(stderr, "DATA_CALLBACK_CLOSED\n");
-        	break;
+            fprintf(stderr, "DATA_CALLBACK_CLOSED\n");
+            break;
 
-    	default:
-        	break;
+        default:
+            break;
     }
     return 0;
 }
@@ -166,7 +169,7 @@ static struct libwebsocket_protocols protocols[] = {
     {
         "rp_signals_callback_protocol",
         rp_signals_callback,
-        sizeof(struct session_data),
+        sizeof(struct ws_package_data),
         0,
         NULL,
         0
@@ -185,7 +188,7 @@ void *ws_worker_thread(void *arg)
 }
 
 int rp_websocket_main(int *stop){
-	/* needed even with extensions disabled for create context */
+    /* needed even with extensions disabled for create context */
     struct libwebsocket_context *context; 
 
     /*
@@ -224,33 +227,34 @@ int rp_websocket_main(int *stop){
     info.port = 8080;
     info.protocols = protocols;
 
-	#ifndef LWS_NO_EXTENSIONS
-	    info.extensions = libwebsocket_get_internal_extensions();
-	#endif
+    #ifndef LWS_NO_EXTENSIONS
+        info.extensions = libwebsocket_get_internal_extensions();
+    #endif
     info.gid = -1;
     info.uid = -1;
     /* No special options */
     info.options = 0;
 
+    // TODO: Use security algorithms
+    info.ssl_cert_filepath = NULL;
+    info.ssl_private_key_filepath = NULL;
+
     context = libwebsocket_create_context(&info);
 
     /* Error check */
     if(context == NULL) {
-    	fprintf(stderr, "libwebsocket init failed\n");
-    	return -1;
+        fprintf(stderr, "libwebsocket init failed\n");
+        return -1;
     }
 
      // Make sure the effective start of buffer is basic array type aligned
-    int preamble = align(LWS_SEND_BUFFER_PRE_PADDING, sizeof(float));
+    int preamble = align(LWS_SEND_BUFFER_PRE_PADDING, sizeof(float));;
 
     /* Actual data malloc */
-    int payload = (SIG_NUM) * sizeof(float);
-
+    int payload = (SIG_NUM) * sizeof(float);;
     /* Tail data  */
-    int tail = LWS_SEND_BUFFER_POST_PADDING;
-
     /* Buffer for sending data */
-    unsigned char *buf = (unsigned char*) malloc(preamble + payload + tail);
+    unsigned char *buf = (unsigned char*) malloc(preamble + payload + LWS_SEND_BUFFER_POST_PADDING);
     fbuf = (float *)&buf[preamble];
 
     rp_signals = (float **)malloc(SIG_NUM * sizeof(float *));
@@ -263,7 +267,9 @@ int rp_websocket_main(int *stop){
 
     int n = 0;
     while(!n && !(*stop)){
-    	n = libwebsocket_service(context, 10);
+
+        /* https://libwebsockets.org/libwebsockets-api-doc.html */
+        n = libwebsocket_service(context, 10);
     }
 
     libwebsocket_context_destroy(context);

@@ -15,15 +15,17 @@
 #ifndef __WEBSOCKET_H
 #define __WEBSOCKET_H
 
-struct session_data {
+
+struct ws_package_data {
+    int   preamble;
     int   payload;
-    int   pos;
+    int   tail;
 };
 
 int websocket_init(void);
 int websocket_exit(void);
 
-void rp_prepare_signals(float *fbuf, struct session_data *data);
+void rp_prepare_signals(float *fbuf);
 void *ws_worker_thread(void *args);
 int   rp_websocket_main(int *stop);
 
